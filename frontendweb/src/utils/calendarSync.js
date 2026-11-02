@@ -33,9 +33,9 @@ export function downloadSingleContestIcs(contest) {
   const icsData = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//ContestPulse//SingleContest//EN',
+    'PRODID:-//Contendar//SingleContest//EN',
     'BEGIN:VEVENT',
-    `UID:${contest.id}@contestpulse.app`,
+    `UID:${contest.id}@contendar.app`,
     `DTSTAMP:${dtStamp}`,
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,

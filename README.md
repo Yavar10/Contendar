@@ -1,8 +1,8 @@
-# ContestPulse — Competitive Programming Calendar & Live Tracker
+# CONTENDAR — Competitive Programming Chrono Radar
 
-A modern competitive programming calendar and tracker for **LeetCode**, **Codeforces**, **CodeChef**, and expandable platform providers (e.g. **AtCoder**).
+A high-performance competitive programming calendar & telemetry radar tracking **Codeforces**, **LeetCode**, **CodeChef**, and **AtCoder**, designed in an iconic **Swiss Typography Maximalist** aesthetic.
 
-Built using **JavaScript**, featuring an **Express.js** backend with an extensible adapter architecture and a **React 19 + Vite** web frontend.
+Built with an **Express.js** extensible platform adapter backend and a high-energy **React 19 + Vite** web interface.
 
 ---
 

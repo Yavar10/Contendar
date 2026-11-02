@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  ExternalLink,
   CalendarPlus,
   Download,
   Copy,
   Check,
   Clock,
-  Radio,
-  Layers,
+  ArrowUpRight,
   Info
 } from 'lucide-react';
 import { formatDateTime, formatDuration, getCountdown } from '../utils/timeUtils';
@@ -49,170 +47,170 @@ export function ContestModal({ contest, timezone, onClose }) {
     downloadSingleContestIcs(contest);
   };
 
+  const platformPrefix = {
+    codeforces: 'CF',
+    leetcode: 'LC',
+    codechef: 'CC',
+    atcoder: 'AC'
+  }[contest.platform] || 'CP';
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-backdrop-swiss" onClick={onClose}>
       <div
-        className="modal-content animate-scale-up"
+        className="modal-dossier animate-scale-up swiss-crosshair"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: '580px' }}
+        style={{
+          '--modal-accent': contest.platformColor || 'var(--cyber-blue)'
+        }}
       >
-        {/* Header */}
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span
-              className="platform-dot"
-              style={{
-                width: '12px',
-                height: '12px',
-                background: contest.platformColor || 'var(--accent-primary)'
-              }}
-            />
-            <span
-              style={{
-                fontWeight: 700,
-                color: contest.platformColor,
-                fontSize: '0.88rem',
-                textTransform: 'uppercase'
-              }}
-            >
-              {contest.platformName}
+        {/* Dossier Header */}
+        <div className="dossier-header">
+          <div className="dossier-meta-group">
+            <span className="dossier-id mono font-bold">
+              [DOSSIER // {contest.id}]
             </span>
+            <div className="dossier-platform-tag mono">
+              <span>[{platformPrefix}]</span>
+              <span className="font-display">{contest.platformName}</span>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className={`status-badge ${isLive ? 'live' : 'upcoming'}`}>
-              {isLive ? (
-                <>
-                  <Radio size={12} className="pulse-indicator" />
-                  <span>LIVE</span>
-                </>
-              ) : (
+          <div className="dossier-header-actions">
+            {isLive ? (
+              <div className="status-live-stamp mono">
+                <div className="equalizer-bars">
+                  <span className="equalizer-bar" />
+                  <span className="equalizer-bar" />
+                  <span className="equalizer-bar" />
+                </div>
+                <span>LIVE NOW</span>
+              </div>
+            ) : (
+              <div className="status-upcoming-stamp mono">
                 <span>UPCOMING</span>
-              )}
-            </div>
+              </div>
+            )}
 
-            <button className="btn-icon" onClick={onClose} aria-label="Close modal">
-              <X size={18} />
+            <button className="btn-close-dossier mono" onClick={onClose} aria-label="Close dossier">
+              <X size={16} />
             </button>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="modal-body">
-          {/* Title */}
-          <h2 style={{ fontSize: '1.35rem', lineHeight: 1.3, margin: 0 }}>
+        {/* Dossier Body */}
+        <div className="dossier-body">
+          {/* Contest Title */}
+          <h2 className="dossier-title font-display">
             {contest.title}
           </h2>
 
-          {/* Live / Upcoming Countdown Ribbon */}
-          <div className={`countdown-box ${isLive ? 'live' : ''}`} style={{ padding: '12px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Clock size={16} />
-              <span className="countdown-text mono" style={{ fontSize: '0.95rem' }}>
-                {countdown.label}
-              </span>
+          {/* Countdown & Progress Gauge */}
+          <div className={`dossier-countdown-box ${isLive ? 'countdown-live' : ''}`}>
+            <div className="dossier-countdown-row mono">
+              <div className="dossier-time-left">
+                <Clock size={15} />
+                <span>
+                  {isLive ? 'REMAINING: ' : 'COUNTDOWN: '}
+                  <strong className="text-white">{countdown.label}</strong>
+                </span>
+              </div>
+              {isLive && (
+                <span className="dossier-progress-label mono font-bold text-acid">
+                  {Math.round(countdown.progress)}% COMPLETE
+                </span>
+              )}
             </div>
             {isLive && (
-              <span style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 700 }}>
-                {Math.round(countdown.progress)}% completed
-              </span>
+              <div className="dossier-progress-bar">
+                <div
+                  className="dossier-progress-fill"
+                  style={{ width: `${Math.min(100, Math.max(0, countdown.progress))}%` }}
+                />
+              </div>
             )}
           </div>
 
-          {/* Divisions Pill List */}
+          {/* Division Matrix Stamps */}
           <div>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: '6px'
-              }}
-            >
-              Eligible Divisions / Rating Groups
+            <span className="dossier-section-title mono">
+              [ 01 // ELIGIBLE DIVISIONS & RATING GROUPS ]
             </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div className="dossier-tags-row">
               {contest.divisions.map((d, i) => (
-                <span
-                  key={i}
-                  className="division-tag"
-                  style={{
-                    fontSize: '0.8rem',
-                    padding: '4px 10px',
-                    borderColor: 'rgba(99, 102, 241, 0.3)',
-                    background: 'rgba(99, 102, 241, 0.1)'
-                  }}
-                >
+                <span key={i} className="division-stamp mono font-bold">
                   {d}
                 </span>
               ))}
+              {contest.type && (
+                <span className="division-stamp tag-type mono font-bold">
+                  {contest.type}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Time & Duration Details */}
-          <div className="contest-meta-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div className="meta-item">
-              <span className="meta-item-label">Starts At</span>
-              <span className="meta-item-value">
-                {formatDateTime(contest.startTimeMs, timezone)}
-              </span>
-            </div>
-
-            <div className="meta-item">
-              <span className="meta-item-label">Ends At</span>
-              <span className="meta-item-value">
-                {formatDateTime(contest.endTimeMs, timezone)}
-              </span>
-            </div>
-
-            <div className="meta-item">
-              <span className="meta-item-label">Duration</span>
-              <span className="meta-item-value">
-                {formatDuration(contest.durationSeconds)}
-              </span>
-            </div>
-
-            <div className="meta-item">
-              <span className="meta-item-label">Format / Type</span>
-              <span className="meta-item-value">{contest.type || 'Standard'}</span>
+          {/* Chrono Telemetry Specifications Matrix */}
+          <div>
+            <span className="dossier-section-title mono">
+              [ 02 // CHRONO & PLATFORM TELEMETRY ]
+            </span>
+            <div className="dossier-specs-table">
+              <div className="spec-row">
+                <span className="spec-key mono">START_CHRONO:</span>
+                <span className="spec-data mono font-bold">
+                  {formatDateTime(contest.startTimeMs, timezone)}
+                </span>
+              </div>
+              <div className="spec-row">
+                <span className="spec-key mono">END_CHRONO:</span>
+                <span className="spec-data mono font-bold">
+                  {formatDateTime(contest.endTimeMs, timezone)}
+                </span>
+              </div>
+              <div className="spec-row">
+                <span className="spec-key mono">DURATION:</span>
+                <span className="spec-data mono font-bold">
+                  {formatDuration(contest.durationSeconds)}
+                </span>
+              </div>
+              <div className="spec-row">
+                <span className="spec-key mono">CONTEST_TYPE:</span>
+                <span className="spec-data mono font-bold">
+                  {contest.type || 'Standard Rated'}
+                </span>
+              </div>
+              <div className="spec-row">
+                <span className="spec-key mono">PLATFORM_HUB:</span>
+                <span className="spec-data mono font-bold">
+                  {contest.platformName}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Description */}
           {contest.description && (
-            <div
-              style={{
-                fontSize: '0.85rem',
-                color: 'var(--text-secondary)',
-                background: 'rgba(0, 0, 0, 0.2)',
-                padding: '12px',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                gap: '8px'
-              }}
-            >
-              <Info size={16} style={{ flexShrink: 0, marginTop: '2px', color: 'var(--text-muted)' }} />
-              <span>{contest.description}</span>
+            <div className="dossier-desc-box">
+              <Info size={15} className="desc-icon" />
+              <span className="mono">{contest.description}</span>
             </div>
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn btn-secondary" onClick={handleGCal}>
-              <CalendarPlus size={15} />
-              <span>Add to GCal</span>
+        {/* Dossier Footer Actions */}
+        <div className="dossier-footer">
+          <div className="dossier-footer-left">
+            <button className="btn-brutal-action mono" onClick={handleGCal}>
+              <CalendarPlus size={14} />
+              <span>+ GCAL</span>
             </button>
-            <button className="btn btn-secondary" onClick={handleIcs}>
-              <Download size={15} />
-              <span>.ics</span>
+            <button className="btn-brutal-action mono" onClick={handleIcs}>
+              <Download size={14} />
+              <span>.ICS</span>
             </button>
-            <button className="btn btn-secondary" onClick={handleCopyLink}>
-              {copied ? <Check size={15} style={{ color: '#10b981' }} /> : <Copy size={15} />}
-              <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+            <button className="btn-brutal-action mono" onClick={handleCopyLink}>
+              {copied ? <Check size={14} className="text-acid" /> : <Copy size={14} />}
+              <span>{copied ? 'COPIED!' : 'COPY LINK'}</span>
             </button>
           </div>
 
@@ -220,10 +218,10 @@ export function ContestModal({ contest, timezone, onClose }) {
             href={contest.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-primary"
+            className="btn-brutal-action btn-action-primary mono"
           >
-            <span>Open Contest</span>
-            <ExternalLink size={15} />
+            <span>ENTER ARENA</span>
+            <ArrowUpRight size={14} strokeWidth={2.5} />
           </a>
         </div>
       </div>

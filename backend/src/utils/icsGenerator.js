@@ -25,7 +25,7 @@ export function generateIcsCalendar(contests, calendarTitle = 'Competitive Progr
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//ContestPulse//ContestCalendar//EN',
+    'PRODID:-//Contendar//ContestCalendar//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${escapeIcsText(calendarTitle)}`,
@@ -33,7 +33,7 @@ export function generateIcsCalendar(contests, calendarTitle = 'Competitive Progr
   ];
 
   for (const contest of contests) {
-    const uid = `${contest.id}@contestpulse.app`;
+    const uid = `${contest.id}@contendar.app`;
     const dtStamp = formatIcsDate(new Date());
     const dtStart = formatIcsDate(new Date(contest.startTimeMs));
     const dtEnd = formatIcsDate(new Date(contest.endTimeMs));

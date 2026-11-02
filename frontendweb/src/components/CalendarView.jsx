@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import {
   generateMonthCalendar,
   isSameDay,
@@ -9,11 +9,11 @@ import {
 } from '../utils/timeUtils';
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+  'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
 ];
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 export function CalendarView({
   contests,
@@ -42,60 +42,64 @@ export function CalendarView({
   const today = new Date();
 
   return (
-    <div className="glass-panel calendar-wrapper">
-      {/* Month Navigation & Platform Legend Header */}
-      <div className="calendar-header">
-        <div className="month-nav">
-          <div className="month-nav-title-group">
-            <h2 className="month-title">
-              {MONTH_NAMES[month]} <span className="month-year-badge">{year}</span>
+    <div className="swiss-panel calendar-poster-wrapper swiss-crosshair">
+      {/* Month Navigation & Controls */}
+      <div className="calendar-poster-header">
+        <div className="month-nav-group">
+          <div className="month-title-wrap">
+            <span className="month-sub-index mono">
+              <span className="bracket">[</span>MONTH // {month < 9 ? `0${month + 1}` : month + 1}<span className="bracket">]</span>
+            </span>
+            <h2 className="month-poster-title font-display">
+              {MONTH_NAMES[month]} <span className="year-accent mono">//{year}</span>
             </h2>
           </div>
 
-          <div className="month-nav-controls">
+          <div className="month-controls-brutal">
             <button
-              className="btn-icon month-nav-btn"
+              className="btn-brutal-nav mono"
               onClick={handlePrevMonth}
               title="Previous Month"
               aria-label="Previous month"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
+              <span>PREV</span>
             </button>
             <button
-              className="btn-icon month-nav-btn"
+              className="btn-brutal-nav mono"
               onClick={handleNextMonth}
               title="Next Month"
               aria-label="Next month"
             >
-              <ChevronRight size={18} />
+              <span>NEXT</span>
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
 
-        {/* Right side controls: Today shortcut */}
+        {/* Today shortcut */}
         <div className="calendar-header-actions">
-          <button className="btn btn-secondary today-btn" onClick={handleToday}>
+          <button className="btn btn-brutal-today mono" onClick={handleToday}>
             <CalendarIcon size={14} />
-            <span>Today</span>
+            <span>[ JUMP TO TODAY ]</span>
           </button>
         </div>
       </div>
 
       {/* Weekday Row */}
-      <div className="calendar-grid weekdays-row">
+      <div className="calendar-grid-uniform weekdays-row-brutal">
         {WEEKDAYS.map((day) => (
-          <div key={day} className="weekday-header">
-            {day}
+          <div key={day} className="weekday-col-header mono font-bold">
+            [{day}]
           </div>
         ))}
       </div>
 
-      {/* 35/42 Days Uniform Grid */}
-      <div className="calendar-grid calendar-days-grid">
+      {/* Uniform Days Grid (No Layout Distortion) */}
+      <div className="calendar-grid-uniform calendar-cells-matrix">
         {days.map((dayItem, index) => {
           const isToday = isSameDay(dayItem.date, today);
 
-          // Contests starting on this day
           const dayContests = contests.filter((c) =>
             isSameDay(c.startTimeMs, dayItem.date)
           );
@@ -107,9 +111,9 @@ export function CalendarView({
           return (
             <div
               key={index}
-              className={`calendar-day-cell ${
-                !dayItem.isCurrentMonth ? 'other-month' : ''
-              } ${isToday ? 'is-today' : ''} ${hasContests ? 'has-contests' : ''}`}
+              className={`calendar-cell-swiss ${
+                !dayItem.isCurrentMonth ? 'cell-other-month' : ''
+              } ${isToday ? 'cell-is-today' : ''} ${hasContests ? 'cell-has-contests' : ''}`}
               onClick={() => {
                 if (hasContests) {
                   onSelectDay({ date: dayItem.date, contests: dayContests });
@@ -121,50 +125,53 @@ export function CalendarView({
                   : ''
               }
             >
-              {/* Day Header */}
-              <div className="day-header">
-                <span className={`day-num ${isToday ? 'day-num-today' : ''}`}>
-                  {dayItem.dayNumber}
+              {/* Day Cell Header */}
+              <div className="cell-header-swiss">
+                <span className={`cell-day-num mono font-display ${isToday ? 'cell-num-today' : ''}`}>
+                  {dayItem.dayNumber < 10 ? `0${dayItem.dayNumber}` : dayItem.dayNumber}
                 </span>
 
                 {hasContests && (
-                  <span className="day-contest-count-badge">
-                    {dayContests.length}
+                  <span className="cell-contest-count-badge mono">
+                    {dayContests.length < 10 ? `0${dayContests.length}` : dayContests.length}
                   </span>
                 )}
               </div>
 
-              {/* Contests List (Strictly Constrained, No Distortion) */}
-              <div className="cell-contests-list">
+              {/* Cell Contests Stack */}
+              <div className="cell-contests-stack">
                 {displayContests.map((c) => {
                   const smartTitle = getSmartContestTitle(c.title, c.platform);
                   const timeStr = formatTimeCompact(c.startTimeMs, timezone);
                   const isLive = c.status === 'LIVE';
 
+                  const platformPrefix = {
+                    codeforces: 'CF',
+                    leetcode: 'LC',
+                    codechef: 'CC',
+                    atcoder: 'AC'
+                  }[c.platform] || 'CP';
+
                   return (
                     <div
                       key={c.id}
-                      className={`calendar-pill ${isLive ? 'calendar-pill-live' : ''}`}
+                      className={`calendar-pill-swiss ${isLive ? 'pill-live-pulse' : ''}`}
                       style={{
-                        '--pill-platform-color': c.platformColor || '#6366f1',
-                        borderLeftColor: c.platformColor || '#6366f1'
+                        '--pill-accent': c.platformColor || '#0055ff',
+                        borderLeftColor: c.platformColor || '#0055ff'
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectContest(c);
                       }}
-                      title={`${c.platformName}: ${c.title}\nTime: ${formatTimeOnly(
+                      title={`${c.platformName}: ${c.title}\nStarts: ${formatTimeOnly(
                         c.startTimeMs,
                         timezone
                       )}\nDuration: ${Math.round(c.durationSeconds / 60)} mins\nStatus: ${c.status}`}
                     >
-                      {/* Monospace time badge */}
-                      <span className="pill-time mono">{timeStr}</span>
-
-                      {/* Smart short title with strict overflow hidden */}
-                      <span className="pill-title">{smartTitle}</span>
-
-                      {/* Live pulse dot if ongoing */}
+                      <span className="pill-platform-tag mono">[{platformPrefix}]</span>
+                      <span className="pill-chrono-time mono">{timeStr}</span>
+                      <span className="pill-title-text font-display">{smartTitle}</span>
                       {isLive && <span className="pill-live-dot" />}
                     </div>
                   );
@@ -173,14 +180,14 @@ export function CalendarView({
                 {/* Overflow +X more pill */}
                 {remainingCount > 0 && (
                   <button
-                    className="more-pill"
+                    className="more-pill-brutal mono"
                     onClick={(e) => {
                       e.stopPropagation();
                       onSelectDay({ date: dayItem.date, contests: dayContests });
                     }}
                     title={`View all ${dayContests.length} contests on this date`}
                   >
-                    <span>+{remainingCount} more</span>
+                    <span>+{remainingCount} MORE</span>
                   </button>
                 )}
               </div>

@@ -1,7 +1,6 @@
 import React from 'react';
-import { X, Calendar as CalendarIcon, ExternalLink, Clock } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, ArrowUpRight } from 'lucide-react';
 import { formatDateTime, formatDuration } from '../utils/timeUtils';
-import { createGoogleCalendarUrl } from '../utils/calendarSync';
 
 export function DayDetailModal({ dayData, timezone, onClose, onSelectContest }) {
   if (!dayData) return null;
@@ -12,100 +11,98 @@ export function DayDetailModal({ dayData, timezone, onClose, onSelectContest }) 
     month: 'long',
     day: 'numeric',
     year: 'numeric'
-  }).format(date);
+  }).format(date).toUpperCase();
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-backdrop-swiss" onClick={onClose}>
       <div
-        className="modal-content animate-scale-up"
+        className="modal-dossier animate-scale-up swiss-crosshair"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: '600px' }}
+        style={{ maxWidth: '640px' }}
       >
         {/* Header */}
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <CalendarIcon size={20} style={{ color: 'var(--accent-primary)' }} />
-            <div>
-              <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{formattedDate}</h3>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                {contests.length} contest{contests.length > 1 ? 's' : ''} scheduled
-              </span>
+        <div className="dossier-header">
+          <div className="dossier-meta-group">
+            <span className="dossier-id mono font-bold">
+              [DAY_CHRONO // {contests.length} EVENTS]
+            </span>
+            <div className="dossier-platform-tag mono">
+              <CalendarIcon size={14} />
+              <span className="font-display">{formattedDate}</span>
             </div>
           </div>
-          <button className="btn-icon" onClick={onClose} aria-label="Close modal">
-            <X size={18} />
+
+          <button className="btn-close-dossier mono" onClick={onClose} aria-label="Close dossier">
+            <X size={16} />
           </button>
         </div>
 
         {/* Contest List */}
-        <div className="modal-body">
-          {contests.map((c) => (
-            <div
-              key={c.id}
-              className="glass-panel"
-              style={{
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                cursor: 'pointer',
-                borderLeft: `4px solid ${c.platformColor || 'var(--accent-primary)'}`
-              }}
-              onClick={() => onSelectContest(c)}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span
+        <div className="dossier-body">
+          <div className="day-contests-list">
+            {contests.map((c) => {
+              const platformPrefix = {
+                codeforces: 'CF',
+                leetcode: 'LC',
+                codechef: 'CC',
+                atcoder: 'AC'
+              }[c.platform] || 'CP';
+
+              const isLive = c.status === 'LIVE';
+
+              return (
+                <div
+                  key={c.id}
+                  className="swiss-panel day-contest-item"
                   style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    color: c.platformColor,
-                    textTransform: 'uppercase'
+                    borderLeft: `4px solid ${c.platformColor || 'var(--cyber-blue)'}`,
+                    '--item-accent': c.platformColor || 'var(--cyber-blue)'
                   }}
+                  onClick={() => onSelectContest(c)}
                 >
-                  {c.platformName}
-                </span>
+                  <div className="day-item-top">
+                    <span className="day-platform-code mono font-bold">
+                      [{platformPrefix}] {c.platformName}
+                    </span>
 
-                <span
-                  className={`status-badge ${c.status === 'LIVE' ? 'live' : 'upcoming'}`}
-                  style={{ fontSize: '0.68rem', padding: '2px 8px' }}
-                >
-                  {c.status}
-                </span>
-              </div>
+                    {isLive ? (
+                      <span className="status-live-stamp mono font-bold" style={{ fontSize: '0.68rem', padding: '2px 6px' }}>
+                        ● LIVE NOW
+                      </span>
+                    ) : (
+                      <span className="status-upcoming-stamp mono" style={{ fontSize: '0.68rem', padding: '2px 6px' }}>
+                        UPCOMING
+                      </span>
+                    )}
+                  </div>
 
-              <h4 style={{ fontSize: '0.98rem', margin: 0 }}>{c.title}</h4>
+                  <h4 className="day-item-title font-display">{c.title}</h4>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {c.divisions.map((d, i) => (
-                  <span key={i} className="division-tag" style={{ fontSize: '0.7rem' }}>
-                    {d}
-                  </span>
-                ))}
-              </div>
+                  <div className="division-tags-row">
+                    {c.divisions.map((d, i) => (
+                      <span key={i} className="division-tag-stamp mono" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
+                        {d}
+                      </span>
+                    ))}
+                  </div>
 
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontSize: '0.8rem',
-                  color: 'var(--text-secondary)'
-                }}
-              >
-                <span>{formatDateTime(c.startTimeMs, timezone)}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Clock size={12} />
-                  {formatDuration(c.durationSeconds)}
-                </span>
-              </div>
-            </div>
-          ))}
+                  <div className="day-item-meta mono">
+                    <span>{formatDateTime(c.startTimeMs, timezone)}</span>
+                    <span className="day-item-duration">
+                      <Clock size={12} />
+                      {formatDuration(c.durationSeconds)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>
-            Close
+        <div className="dossier-footer" style={{ justifyContent: 'flex-end' }}>
+          <button className="btn-brutal-action mono" onClick={onClose}>
+            [ CLOSE CHRONO ]
           </button>
         </div>
       </div>

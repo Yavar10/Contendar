@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, CalendarPlus, Clock, Download, Radio, ShieldCheck } from 'lucide-react';
+import { ExternalLink, CalendarPlus, Clock, Download, Radio, ArrowUpRight } from 'lucide-react';
 import { formatDateTime, formatDuration, getCountdown } from '../utils/timeUtils';
 import { createGoogleCalendarUrl, downloadSingleContestIcs } from '../utils/calendarSync';
 
 export function ContestCard({ contest, timezone, onSelectContest }) {
   const [nowMs, setNowMs] = useState(Date.now());
 
-  // Update countdown every second
   useEffect(() => {
     const timer = setInterval(() => {
       setNowMs(Date.now());
@@ -25,7 +24,6 @@ export function ContestCard({ contest, timezone, onSelectContest }) {
   const isLive = contest.status === 'LIVE';
 
   const handleCardClick = (e) => {
-    // If click was on an action button, don't trigger the modal
     if (e.target.closest('button') || e.target.closest('a')) {
       return;
     }
@@ -42,118 +40,132 @@ export function ContestCard({ contest, timezone, onSelectContest }) {
     downloadSingleContestIcs(contest);
   };
 
+  const platformPrefix = {
+    codeforces: 'CF',
+    leetcode: 'LC',
+    codechef: 'CC',
+    atcoder: 'AC'
+  }[contest.platform] || 'CP';
+
   return (
     <div
-      className={`glass-panel contest-card ${isLive ? 'live-card' : ''}`}
+      className={`swiss-panel contest-card-swiss swiss-crosshair ${isLive ? 'is-live-card' : ''}`}
+      style={{
+        '--card-accent': contest.platformColor || '#0055ff'
+      }}
       onClick={handleCardClick}
     >
-      <div>
-        {/* Top bar: Platform Badge & Status */}
-        <div className="card-top">
-          <div
-            className="platform-badge"
-            style={{
-              backgroundColor: contest.platformBadgeBg || 'rgba(255, 255, 255, 0.08)',
-              color: contest.platformColor || '#fff',
-              border: `1px solid ${contest.platformColor || '#ffffff22'}`
-            }}
-          >
-            <span
-              className="platform-dot"
-              style={{ background: contest.platformColor || '#fff' }}
-            />
-            <span>{contest.platformName}</span>
-          </div>
-
-          <div className={`status-badge ${isLive ? 'live' : 'upcoming'}`}>
-            {isLive ? (
-              <>
-                <Radio size={12} className="pulse-indicator" />
-                <span>LIVE</span>
-              </>
-            ) : (
-              <span>UPCOMING</span>
-            )}
-          </div>
+      {/* Top Banner: Platform Stamp & Status Indicator */}
+      <div className="card-top-header">
+        <div className="platform-stamp mono">
+          <span className="platform-tag-prefix">[{platformPrefix}]</span>
+          <span className="platform-tag-name font-display">{contest.platformName}</span>
         </div>
 
-        {/* Title */}
-        <h3 className="card-title" title={contest.title}>
-          {contest.title}
-        </h3>
+        {isLive ? (
+          <div className="card-live-stamp mono">
+            <div className="equalizer-bars">
+              <span className="equalizer-bar" />
+              <span className="equalizer-bar" />
+              <span className="equalizer-bar" />
+            </div>
+            <span>LIVE NOW</span>
+          </div>
+        ) : (
+          <div className="card-upcoming-stamp mono">
+            <span>UPCOMING</span>
+          </div>
+        )}
+      </div>
 
-        {/* Division Tags */}
-        <div className="divisions-row">
-          {contest.divisions.map((div, i) => (
-            <span key={i} className="division-tag">
-              {div}
-            </span>
-          ))}
-          {contest.type && (
-            <span className="division-tag" style={{ color: '#93c5fd' }}>
-              {contest.type}
-            </span>
-          )}
+      {/* Main Title */}
+      <h3 className="contest-title-swiss font-display" title={contest.title}>
+        {contest.title}
+      </h3>
+
+      {/* Division / Tag Matrix */}
+      <div className="division-tags-row">
+        {contest.divisions.map((div, i) => (
+          <span key={i} className="division-tag-stamp mono">
+            {div}
+          </span>
+        ))}
+        {contest.type && (
+          <span className="division-tag-stamp tag-type mono">
+            {contest.type}
+          </span>
+        )}
+      </div>
+
+      {/* Telemetry Specs Box */}
+      <div className="telemetry-specs-box">
+        <div className="spec-item">
+          <span className="spec-label mono">START_CHRONO</span>
+          <span className="spec-val mono">
+            {formatDateTime(contest.startTimeMs, timezone)}
+          </span>
         </div>
 
-        {/* Timing Meta Grid */}
-        <div className="contest-meta-grid">
-          <div className="meta-item">
-            <span className="meta-item-label">Starts</span>
-            <span className="meta-item-value">
-              {formatDateTime(contest.startTimeMs, timezone)}
-            </span>
-          </div>
-
-          <div className="meta-item">
-            <span className="meta-item-label">Duration</span>
-            <span className="meta-item-value" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Clock size={13} style={{ color: 'var(--text-muted)' }} />
-              {formatDuration(contest.durationSeconds)}
-            </span>
-          </div>
-        </div>
-
-        {/* Countdown Box */}
-        <div className={`countdown-box ${isLive ? 'live' : ''}`}>
-          <span className="countdown-text mono">{countdown.label}</span>
-          {isLive && (
-            <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 700 }}>
-              {Math.round(countdown.progress)}% done
-            </span>
-          )}
+        <div className="spec-item">
+          <span className="spec-label mono">DURATION</span>
+          <span className="spec-val mono">
+            {formatDuration(contest.durationSeconds)}
+          </span>
         </div>
       </div>
 
-      {/* Action Footer */}
-      <div className="card-actions">
+      {/* Live Countdown / Progress Gauge */}
+      <div className={`countdown-bar-brutal ${isLive ? 'countdown-live' : ''}`}>
+        <div className="countdown-info-row mono">
+          <span className="countdown-chrono-text">
+            {isLive ? 'TIME REMAINING: ' : 'COUNTDOWN: '}
+            <strong className="countdown-highlight">{countdown.label}</strong>
+          </span>
+          {isLive && (
+            <span className="countdown-percent mono font-bold">
+              {Math.round(countdown.progress)}% ELAPSED
+            </span>
+          )}
+        </div>
+        {isLive && (
+          <div className="countdown-progress-track">
+            <div
+              className="countdown-progress-fill"
+              style={{ width: `${Math.min(100, Math.max(0, countdown.progress))}%` }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Brutalist Action Button Row */}
+      <div className="card-actions-swiss">
         <a
           href={contest.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="card-btn action-primary"
+          className="btn-brutal-action btn-action-primary mono"
           onClick={(e) => e.stopPropagation()}
         >
-          <span>Open</span>
-          <ExternalLink size={13} />
+          <span>ENTER ARENA</span>
+          <ArrowUpRight size={13} strokeWidth={2.5} />
         </a>
 
         <button
-          className="card-btn"
+          className="btn-brutal-action mono"
           onClick={handleGCalClick}
           title="Add to Google Calendar"
         >
-          <CalendarPlus size={14} />
-          <span>GCal</span>
+          <CalendarPlus size={13} />
+          <span>GCAL</span>
         </button>
 
         <button
-          className="card-btn"
+          className="btn-brutal-action mono"
           onClick={handleIcsClick}
           title="Download .ics file"
         >
-          <Download size={14} />
-          <span>.ics</span>
+          <Download size={13} />
+          <span>.ICS</span>
         </button>
       </div>
     </div>

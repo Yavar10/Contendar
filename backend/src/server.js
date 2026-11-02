@@ -31,8 +31,8 @@ app.get('/api/health', (req, res) => {
 // Root welcome
 app.get('/', (req, res) => {
   res.json({
-    name: 'ContestPulse API',
-    description: 'Competitive programming contest calendar API supporting LeetCode, Codeforces, CodeChef, and expandable platforms.',
+    name: 'Contendar API',
+    description: 'High-performance competitive programming contest calendar & radar API supporting LeetCode, Codeforces, CodeChef, and AtCoder.',
     endpoints: {
       platforms: '/api/platforms',
       contests: '/api/contests',
@@ -43,5 +43,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 ContestPulse Backend server is running at http://localhost:${PORT}`);
+  console.log(`🚀 Contendar Backend server is running at http://localhost:${PORT}`);
 });

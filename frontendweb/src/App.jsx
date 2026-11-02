@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
+import { MarqueeTicker } from './components/MarqueeTicker';
 import { StatsRibbon } from './components/StatsRibbon';
 import { FilterBar } from './components/FilterBar';
 import { ListView } from './components/ListView';
@@ -192,8 +193,11 @@ export default function App() {
         selectedDivisions={selectedDivisions}
       />
 
+      {/* Maximalist Swiss Marquee Ticker Tape */}
+      <MarqueeTicker liveCount={liveCount} totalCount={allContests.length} />
+
       {/* Main Content Area */}
-      <main className="container" style={{ flex: 1, paddingBottom: '60px' }}>
+      <main className="container" style={{ flex: 1, paddingBottom: '60px', marginTop: '16px' }}>
         {/* Analytics Stats Ribbon */}
         <StatsRibbon
           contests={filteredContests}
@@ -221,28 +225,33 @@ export default function App() {
         {/* Loading Spinner */}
         {isLoading ? (
           <div
-            className="glass-panel"
+            className="swiss-panel swiss-crosshair"
             style={{
-              padding: '60px 24px',
+              padding: '64px 24px',
               textAlign: 'center',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '12px'
+              gap: '16px'
             }}
           >
-            <div
-              className="pulse-indicator"
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: 'var(--accent-primary)'
-              }}
-            />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Syncing live contest schedules from platforms...
-            </p>
+            <div className="equalizer-bars" style={{ height: '28px', gap: '4px' }}>
+              <span className="equalizer-bar" style={{ width: '5px' }} />
+              <span className="equalizer-bar" style={{ width: '5px' }} />
+              <span className="equalizer-bar" style={{ width: '5px' }} />
+              <span className="equalizer-bar" style={{ width: '5px' }} />
+            </div>
+            <div>
+              <span className="swiss-index-stamp">
+                <span className="bracket">[</span>TELEMETRY // SYNC_FEEDS<span className="bracket">]</span>
+              </span>
+              <p className="mono font-bold" style={{ color: 'var(--text-white)', marginTop: '6px', fontSize: '1rem' }}>
+                CONNECTING TO CONTEST RADAR PLATFORMS...
+              </p>
+              <p className="mono" style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '4px' }}>
+                RETRIEVING CODEFORCES • LEETCODE • CODECHEF • ATCODER
+              </p>
+            </div>
           </div>
         ) : (
           <>
