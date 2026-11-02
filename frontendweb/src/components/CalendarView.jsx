@@ -7,13 +7,14 @@ import {
   getSmartContestTitle,
   formatTimeOnly
 } from '../utils/timeUtils';
+import { PlatformIcon } from './PlatformIcons';
 
 const MONTH_NAMES = [
-  'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
-  'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function CalendarView({
   contests,
@@ -42,61 +43,51 @@ export function CalendarView({
   const today = new Date();
 
   return (
-    <div className="swiss-panel calendar-poster-wrapper swiss-crosshair">
-      {/* Month Navigation & Controls */}
-      <div className="calendar-poster-header">
-        <div className="month-nav-group">
-          <div className="month-title-wrap">
-            <span className="month-sub-index mono">
-              <span className="bracket">[</span>MONTH // {month < 9 ? `0${month + 1}` : month + 1}<span className="bracket">]</span>
-            </span>
-            <h2 className="month-poster-title font-display">
-              {MONTH_NAMES[month]} <span className="year-accent mono">//{year}</span>
-            </h2>
-          </div>
+    <div className="calendar-panel">
+      {/* Month Navigation Header */}
+      <div className="calendar-top-bar">
+        <div className="calendar-month-group">
+          <h2 className="calendar-title">
+            {MONTH_NAMES[month]} <span className="calendar-year">{year}</span>
+          </h2>
 
-          <div className="month-controls-brutal">
+          <div className="calendar-nav-btns">
             <button
-              className="btn-brutal-nav mono"
+              className="calendar-nav-btn"
               onClick={handlePrevMonth}
               title="Previous Month"
               aria-label="Previous month"
             >
               <ChevronLeft size={16} />
-              <span>PREV</span>
             </button>
             <button
-              className="btn-brutal-nav mono"
+              className="calendar-nav-btn"
               onClick={handleNextMonth}
               title="Next Month"
               aria-label="Next month"
             >
-              <span>NEXT</span>
               <ChevronRight size={16} />
             </button>
           </div>
         </div>
 
-        {/* Today shortcut */}
-        <div className="calendar-header-actions">
-          <button className="btn btn-brutal-today mono" onClick={handleToday}>
-            <CalendarIcon size={14} />
-            <span>[ JUMP TO TODAY ]</span>
-          </button>
-        </div>
+        <button className="today-jump-btn" onClick={handleToday}>
+          <CalendarIcon size={13} />
+          <span>Today</span>
+        </button>
       </div>
 
       {/* Weekday Row */}
-      <div className="calendar-grid-uniform weekdays-row-brutal">
+      <div className="calendar-weekdays-row">
         {WEEKDAYS.map((day) => (
-          <div key={day} className="weekday-col-header mono font-bold">
-            [{day}]
+          <div key={day} className="weekday-cell">
+            {day}
           </div>
         ))}
       </div>
 
-      {/* Uniform Days Grid (No Layout Distortion) */}
-      <div className="calendar-grid-uniform calendar-cells-matrix">
+      {/* Uniform Days Grid */}
+      <div className="calendar-matrix">
         {days.map((dayItem, index) => {
           const isToday = isSameDay(dayItem.date, today);
 
@@ -111,9 +102,9 @@ export function CalendarView({
           return (
             <div
               key={index}
-              className={`calendar-cell-swiss ${
-                !dayItem.isCurrentMonth ? 'cell-other-month' : ''
-              } ${isToday ? 'cell-is-today' : ''} ${hasContests ? 'cell-has-contests' : ''}`}
+              className={`calendar-day-tile ${
+                !dayItem.isCurrentMonth ? 'is-muted-day' : ''
+              } ${isToday ? 'is-today-tile' : ''} ${hasContests ? 'has-events' : ''}`}
               onClick={() => {
                 if (hasContests) {
                   onSelectDay({ date: dayItem.date, contests: dayContests });
@@ -126,40 +117,29 @@ export function CalendarView({
               }
             >
               {/* Day Cell Header */}
-              <div className="cell-header-swiss">
-                <span className={`cell-day-num mono font-display ${isToday ? 'cell-num-today' : ''}`}>
-                  {dayItem.dayNumber < 10 ? `0${dayItem.dayNumber}` : dayItem.dayNumber}
+              <div className="day-tile-header">
+                <span className={`day-number ${isToday ? 'today-circle' : ''}`}>
+                  {dayItem.dayNumber}
                 </span>
 
                 {hasContests && (
-                  <span className="cell-contest-count-badge mono">
-                    {dayContests.length < 10 ? `0${dayContests.length}` : dayContests.length}
+                  <span className="day-events-pill">
+                    {dayContests.length}
                   </span>
                 )}
               </div>
 
-              {/* Cell Contests Stack */}
-              <div className="cell-contests-stack">
+              {/* Day Events Stack */}
+              <div className="day-events-stack">
                 {displayContests.map((c) => {
                   const smartTitle = getSmartContestTitle(c.title, c.platform);
                   const timeStr = formatTimeCompact(c.startTimeMs, timezone);
                   const isLive = c.status === 'LIVE';
 
-                  const platformPrefix = {
-                    codeforces: 'CF',
-                    leetcode: 'LC',
-                    codechef: 'CC',
-                    atcoder: 'AC'
-                  }[c.platform] || 'CP';
-
                   return (
                     <div
                       key={c.id}
-                      className={`calendar-pill-swiss ${isLive ? 'pill-live-pulse' : ''}`}
-                      style={{
-                        '--pill-accent': c.platformColor || '#0055ff',
-                        borderLeftColor: c.platformColor || '#0055ff'
-                      }}
+                      className={`calendar-event-item ${isLive ? 'is-live-event' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectContest(c);
@@ -167,27 +147,27 @@ export function CalendarView({
                       title={`${c.platformName}: ${c.title}\nStarts: ${formatTimeOnly(
                         c.startTimeMs,
                         timezone
-                      )}\nDuration: ${Math.round(c.durationSeconds / 60)} mins\nStatus: ${c.status}`}
+                      )}\nDuration: ${Math.round(c.durationSeconds / 60)}m`}
                     >
-                      <span className="pill-platform-tag mono">[{platformPrefix}]</span>
-                      <span className="pill-chrono-time mono">{timeStr}</span>
-                      <span className="pill-title-text font-display">{smartTitle}</span>
-                      {isLive && <span className="pill-live-dot" />}
+                      <PlatformIcon platform={c.platform} size={11} className="event-icon" />
+                      <span className="event-time mono">{timeStr}</span>
+                      <span className="event-title">{smartTitle}</span>
+                      {isLive && <span className="event-live-indicator" />}
                     </div>
                   );
                 })}
 
-                {/* Overflow +X more pill */}
+                {/* More events link */}
                 {remainingCount > 0 && (
                   <button
-                    className="more-pill-brutal mono"
+                    className="more-events-tag"
                     onClick={(e) => {
                       e.stopPropagation();
                       onSelectDay({ date: dayItem.date, contests: dayContests });
                     }}
                     title={`View all ${dayContests.length} contests on this date`}
                   >
-                    <span>+{remainingCount} MORE</span>
+                    +{remainingCount} more
                   </button>
                 )}
               </div>

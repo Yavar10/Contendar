@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, Globe, Download, RefreshCw, Radio } from 'lucide-react';
+import { Calendar, Globe, Download, RefreshCw } from 'lucide-react';
 import { TIMEZONES } from '../utils/timeUtils';
 import { downloadFilteredCalendar } from '../utils/calendarSync';
 
@@ -17,57 +17,40 @@ export function Navbar({
   };
 
   return (
-    <header className="navbar">
-      <div className="container navbar-container">
-        {/* Brand Group */}
-        <div className="brand-wrapper" title="CONTENDAR — Competitive Programming Chrono Radar">
-          <div className="brand-stamp-icon">
-            <Zap size={20} className="fill-current" />
+    <header className="site-header">
+      <div className="container header-container">
+        {/* Brand */}
+        <div className="brand-lockup">
+          <div className="brand-symbol">
+            <Calendar size={18} strokeWidth={2.2} />
           </div>
-          <div className="brand-text-block">
-            <div className="brand-title-row">
-              <span className="brand-title">CONTENDAR</span>
-              <span className="brand-tag mono">v2.5 // RADAR</span>
-            </div>
-            <div className="brand-subtext mono">
-              <span>[CP.CHRONO.TELEMETRY]</span>
-              <span className="brand-subtext-sep">/</span>
-              <span className="brand-status-feed">4 FEEDS ACTIVE</span>
-            </div>
+          <div className="brand-text">
+            <span className="brand-name">Contendar</span>
+            <span className="brand-meta">Contest Radar</span>
           </div>
         </div>
 
-        {/* Navigation Actions */}
-        <div className="nav-actions">
-          {/* Live Indicator Badge */}
+        {/* Header Right Actions */}
+        <div className="header-actions">
+          {/* Live indicator if contests are active */}
           {liveCount > 0 ? (
-            <div
-              className="live-radar-badge"
-              title={`${liveCount} contest(s) are happening right now!`}
-            >
-              <div className="equalizer-bars">
-                <span className="equalizer-bar" />
-                <span className="equalizer-bar" />
-                <span className="equalizer-bar" />
-                <span className="equalizer-bar" />
-              </div>
-              <span className="live-radar-text mono">
-                {liveCount} {liveCount === 1 ? 'SESSION' : 'SESSIONS'} LIVE
-              </span>
+            <div className="live-status-pill" title={`${liveCount} active contest(s) happening right now`}>
+              <span className="live-pulse-dot" />
+              <span className="live-status-text">{liveCount} live now</span>
             </div>
           ) : (
-            <div className="radar-idle-badge mono">
-              <span className="blinking-radar-dot" style={{ background: '#5d677a', boxShadow: 'none' }} />
-              <span>RADAR IDLE // ALL SYNCED</span>
+            <div className="idle-status-pill">
+              <span className="idle-dot" />
+              <span>All feeds synced</span>
             </div>
           )}
 
-          {/* Timezone Selector */}
-          <div className="timezone-select-wrapper">
-            <span className="timezone-prefix mono">TZ //</span>
+          {/* Timezone picker */}
+          <div className="timezone-control">
+            <Globe size={13} className="timezone-icon" />
             <select
               aria-label="Select Timezone"
-              className="timezone-select mono"
+              className="timezone-select"
               value={timezone}
               onChange={(e) => onTimezoneChange(e.target.value)}
             >
@@ -79,24 +62,24 @@ export function Navbar({
             </select>
           </div>
 
-          {/* Sync / Export ICS button */}
+          {/* Calendar export button */}
           <button
-            className="btn btn-brutal-primary"
+            className="action-btn export-btn"
             onClick={handleExportAll}
-            title="Export filtered contests to iCalendar (.ics)"
+            title="Export filtered contests to .ics calendar"
           >
             <Download size={14} />
-            <span className="mono font-bold">EXPORT .ICS</span>
+            <span className="hide-mobile">Sync .ics</span>
           </button>
 
-          {/* Refresh Button */}
+          {/* Refresh button */}
           <button
-            className="btn-icon-brutal"
+            className="icon-btn refresh-btn"
             onClick={onRefresh}
             title="Refresh contest feeds"
-            aria-label="Refresh contests"
+            aria-label="Refresh contest feeds"
           >
-            <RefreshCw size={15} className={isRefreshing ? 'animate-spin text-acid' : ''} />
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>

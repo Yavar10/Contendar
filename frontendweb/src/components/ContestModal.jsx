@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
+  ExternalLink,
   CalendarPlus,
   Download,
   Copy,
   Check,
   Clock,
-  ArrowUpRight,
+  Calendar,
+  Layers,
   Info
 } from 'lucide-react';
 import { formatDateTime, formatDuration, getCountdown } from '../utils/timeUtils';
 import { createGoogleCalendarUrl, downloadSingleContestIcs } from '../utils/calendarSync';
+import { PlatformIcon } from './PlatformIcons';
 
 export function ContestModal({ contest, timezone, onClose }) {
   if (!contest) return null;
@@ -47,170 +50,146 @@ export function ContestModal({ contest, timezone, onClose }) {
     downloadSingleContestIcs(contest);
   };
 
-  const platformPrefix = {
-    codeforces: 'CF',
-    leetcode: 'LC',
-    codechef: 'CC',
-    atcoder: 'AC'
-  }[contest.platform] || 'CP';
-
   return (
-    <div className="modal-backdrop-swiss" onClick={onClose}>
+    <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-dossier animate-scale-up swiss-crosshair"
+        className="modal-window animate-scale-up"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          '--modal-accent': contest.platformColor || 'var(--cyber-blue)'
-        }}
       >
-        {/* Dossier Header */}
-        <div className="dossier-header">
-          <div className="dossier-meta-group">
-            <span className="dossier-id mono font-bold">
-              [DOSSIER // {contest.id}]
-            </span>
-            <div className="dossier-platform-tag mono">
-              <span>[{platformPrefix}]</span>
-              <span className="font-display">{contest.platformName}</span>
+        {/* Modal Top Header */}
+        <div className="modal-header">
+          <div className="modal-header-platform">
+            <PlatformIcon platform={contest.platform} size={20} />
+            <div>
+              <span className="modal-platform-name">{contest.platformName}</span>
+              <span className="modal-sub-id">#{contest.id}</span>
             </div>
           </div>
 
-          <div className="dossier-header-actions">
+          <div className="modal-header-actions">
             {isLive ? (
-              <div className="status-live-stamp mono">
-                <div className="equalizer-bars">
-                  <span className="equalizer-bar" />
-                  <span className="equalizer-bar" />
-                  <span className="equalizer-bar" />
-                </div>
-                <span>LIVE NOW</span>
+              <div className="modal-live-pill">
+                <span className="live-pulse-dot-sm" />
+                <span>Live Now</span>
               </div>
             ) : (
-              <div className="status-upcoming-stamp mono">
-                <span>UPCOMING</span>
+              <div className="modal-upcoming-pill">
+                <span>Upcoming</span>
               </div>
             )}
 
-            <button className="btn-close-dossier mono" onClick={onClose} aria-label="Close dossier">
+            <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
               <X size={16} />
             </button>
           </div>
         </div>
 
-        {/* Dossier Body */}
-        <div className="dossier-body">
+        {/* Modal Body */}
+        <div className="modal-body-content">
           {/* Contest Title */}
-          <h2 className="dossier-title font-display">
+          <h2 className="modal-title">
             {contest.title}
           </h2>
 
-          {/* Countdown & Progress Gauge */}
-          <div className={`dossier-countdown-box ${isLive ? 'countdown-live' : ''}`}>
-            <div className="dossier-countdown-row mono">
-              <div className="dossier-time-left">
+          {/* Countdown & Progress Box */}
+          <div className={`modal-countdown-strip ${isLive ? 'is-live-strip' : ''}`}>
+            <div className="modal-countdown-row">
+              <div className="modal-countdown-text mono">
                 <Clock size={15} />
                 <span>
-                  {isLive ? 'REMAINING: ' : 'COUNTDOWN: '}
-                  <strong className="text-white">{countdown.label}</strong>
+                  {isLive ? 'Time Remaining: ' : 'Starts in: '}
+                  <strong>{countdown.label}</strong>
                 </span>
               </div>
               {isLive && (
-                <span className="dossier-progress-label mono font-bold text-acid">
-                  {Math.round(countdown.progress)}% COMPLETE
+                <span className="modal-countdown-pct mono">
+                  {Math.round(countdown.progress)}% completed
                 </span>
               )}
             </div>
             {isLive && (
-              <div className="dossier-progress-bar">
+              <div className="modal-progress-track">
                 <div
-                  className="dossier-progress-fill"
+                  className="modal-progress-bar"
                   style={{ width: `${Math.min(100, Math.max(0, countdown.progress))}%` }}
                 />
               </div>
             )}
           </div>
 
-          {/* Division Matrix Stamps */}
-          <div>
-            <span className="dossier-section-title mono">
-              [ 01 // ELIGIBLE DIVISIONS & RATING GROUPS ]
+          {/* Divisions */}
+          <div className="modal-section">
+            <span className="modal-section-title">
+              Eligible Divisions & Rating Categories
             </span>
-            <div className="dossier-tags-row">
+            <div className="modal-chips-row">
               {contest.divisions.map((d, i) => (
-                <span key={i} className="division-stamp mono font-bold">
+                <span key={i} className="modal-chip">
                   {d}
                 </span>
               ))}
               {contest.type && (
-                <span className="division-stamp tag-type mono font-bold">
+                <span className="modal-chip modal-chip-type">
                   {contest.type}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Chrono Telemetry Specifications Matrix */}
-          <div>
-            <span className="dossier-section-title mono">
-              [ 02 // CHRONO & PLATFORM TELEMETRY ]
-            </span>
-            <div className="dossier-specs-table">
-              <div className="spec-row">
-                <span className="spec-key mono">START_CHRONO:</span>
-                <span className="spec-data mono font-bold">
-                  {formatDateTime(contest.startTimeMs, timezone)}
-                </span>
-              </div>
-              <div className="spec-row">
-                <span className="spec-key mono">END_CHRONO:</span>
-                <span className="spec-data mono font-bold">
-                  {formatDateTime(contest.endTimeMs, timezone)}
-                </span>
-              </div>
-              <div className="spec-row">
-                <span className="spec-key mono">DURATION:</span>
-                <span className="spec-data mono font-bold">
-                  {formatDuration(contest.durationSeconds)}
-                </span>
-              </div>
-              <div className="spec-row">
-                <span className="spec-key mono">CONTEST_TYPE:</span>
-                <span className="spec-data mono font-bold">
-                  {contest.type || 'Standard Rated'}
-                </span>
-              </div>
-              <div className="spec-row">
-                <span className="spec-key mono">PLATFORM_HUB:</span>
-                <span className="spec-data mono font-bold">
-                  {contest.platformName}
-                </span>
-              </div>
+          {/* Telemetry Grid */}
+          <div className="modal-grid-2x2">
+            <div className="modal-grid-cell">
+              <span className="grid-cell-label">Start Time</span>
+              <span className="grid-cell-value mono">
+                {formatDateTime(contest.startTimeMs, timezone)}
+              </span>
+            </div>
+
+            <div className="modal-grid-cell">
+              <span className="grid-cell-label">End Time</span>
+              <span className="grid-cell-value mono">
+                {formatDateTime(contest.endTimeMs, timezone)}
+              </span>
+            </div>
+
+            <div className="modal-grid-cell">
+              <span className="grid-cell-label">Duration</span>
+              <span className="grid-cell-value mono">
+                {formatDuration(contest.durationSeconds)}
+              </span>
+            </div>
+
+            <div className="modal-grid-cell">
+              <span className="grid-cell-label">Format</span>
+              <span className="grid-cell-value">
+                {contest.type || 'Official Rated'}
+              </span>
             </div>
           </div>
 
           {/* Description */}
           {contest.description && (
-            <div className="dossier-desc-box">
+            <div className="modal-desc">
               <Info size={15} className="desc-icon" />
-              <span className="mono">{contest.description}</span>
+              <span>{contest.description}</span>
             </div>
           )}
         </div>
 
-        {/* Dossier Footer Actions */}
-        <div className="dossier-footer">
-          <div className="dossier-footer-left">
-            <button className="btn-brutal-action mono" onClick={handleGCal}>
+        {/* Modal Footer */}
+        <div className="modal-footer">
+          <div className="modal-footer-btns">
+            <button className="footer-action-btn" onClick={handleGCal}>
               <CalendarPlus size={14} />
-              <span>+ GCAL</span>
+              <span>GCal</span>
             </button>
-            <button className="btn-brutal-action mono" onClick={handleIcs}>
+            <button className="footer-action-btn" onClick={handleIcs}>
               <Download size={14} />
-              <span>.ICS</span>
+              <span>.ics</span>
             </button>
-            <button className="btn-brutal-action mono" onClick={handleCopyLink}>
-              {copied ? <Check size={14} className="text-acid" /> : <Copy size={14} />}
-              <span>{copied ? 'COPIED!' : 'COPY LINK'}</span>
+            <button className="footer-action-btn" onClick={handleCopyLink}>
+              {copied ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
 
@@ -218,10 +197,10 @@ export function ContestModal({ contest, timezone, onClose }) {
             href={contest.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-brutal-action btn-action-primary mono"
+            className="footer-primary-btn"
           >
-            <span>ENTER ARENA</span>
-            <ArrowUpRight size={14} strokeWidth={2.5} />
+            <span>Enter Contest</span>
+            <ExternalLink size={14} />
           </a>
         </div>
       </div>

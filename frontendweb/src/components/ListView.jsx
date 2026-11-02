@@ -13,46 +13,37 @@ export function ListView({
 
   if (contests.length === 0) {
     return (
-      <div className="swiss-panel empty-state-swiss swiss-crosshair">
-        <div className="empty-icon-box mono">
-          <CalendarX size={36} className="text-muted" />
+      <div className="empty-state-card">
+        <div className="empty-state-icon-box">
+          <CalendarX size={28} />
         </div>
-        <div>
-          <span className="swiss-index-stamp">
-            <span className="bracket">[</span>TELEMETRY // NO MATCH<span className="bracket">]</span>
-          </span>
-          <h3 className="empty-state-title font-display">
-            NO CONTESTS MATCH CURRENT FILTERS
-          </h3>
-          <p className="empty-state-desc mono">
-            Expand platform filters or reset division selections to restore active radar tracking.
-          </p>
-        </div>
-        <button className="btn btn-brutal-primary mono" onClick={onResetFilters}>
+        <h3 className="empty-state-title">No contests match your filters</h3>
+        <p className="empty-state-desc">
+          Try clearing your platform filters or resetting divisions to see upcoming rounds.
+        </p>
+        <button className="reset-filters-btn" onClick={onResetFilters}>
           <Sparkles size={14} />
-          <span>[ RESET ALL FILTERS ]</span>
+          <span>Reset All Filters</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="list-view-chrono">
-      {/* 1. Live Now Section */}
+    <div className="timeline-container">
+      {/* 1. Live Now */}
       {groups.live.length > 0 && (
-        <section className="chrono-section">
-          <div className="chrono-section-header">
-            <div className="chrono-title-group">
-              <span className="chrono-num mono text-acid">01 //</span>
-              <h2 className="chrono-heading font-display text-acid">
-                ACTIVE ARENAS [LIVE RADAR]
-              </h2>
-            </div>
-            <span className="chrono-count-badge badge-live mono">
-              {groups.live.length < 10 ? `0${groups.live.length}` : groups.live.length} ACTIVE
+        <section className="timeline-block">
+          <div className="timeline-heading-row">
+            <h2 className="timeline-heading live-heading">
+              <Radio size={16} className="live-pulse-icon" />
+              <span>Happening Right Now</span>
+            </h2>
+            <span className="timeline-badge live-badge-count">
+              {groups.live.length} active
             </span>
           </div>
-          <div className="contest-grid-swiss">
+          <div className="cards-grid">
             {groups.live.map((contest) => (
               <ContestCard
                 key={contest.id}
@@ -65,21 +56,18 @@ export function ListView({
         </section>
       )}
 
-      {/* 2. Today Section */}
+      {/* 2. Today */}
       {groups.today.length > 0 && (
-        <section className="chrono-section">
-          <div className="chrono-section-header">
-            <div className="chrono-title-group">
-              <span className="chrono-num mono">02 //</span>
-              <h2 className="chrono-heading font-display">
-                TODAY'S LINEUP
-              </h2>
-            </div>
-            <span className="chrono-count-badge mono">
-              {groups.today.length < 10 ? `0${groups.today.length}` : groups.today.length} EVENTS
+        <section className="timeline-block">
+          <div className="timeline-heading-row">
+            <h2 className="timeline-heading">
+              <span>Today</span>
+            </h2>
+            <span className="timeline-badge">
+              {groups.today.length} {groups.today.length === 1 ? 'round' : 'rounds'}
             </span>
           </div>
-          <div className="contest-grid-swiss">
+          <div className="cards-grid">
             {groups.today.map((contest) => (
               <ContestCard
                 key={contest.id}
@@ -92,21 +80,18 @@ export function ListView({
         </section>
       )}
 
-      {/* 3. Tomorrow Section */}
+      {/* 3. Tomorrow */}
       {groups.tomorrow.length > 0 && (
-        <section className="chrono-section">
-          <div className="chrono-section-header">
-            <div className="chrono-title-group">
-              <span className="chrono-num mono">03 //</span>
-              <h2 className="chrono-heading font-display">
-                TOMORROW
-              </h2>
-            </div>
-            <span className="chrono-count-badge mono">
-              {groups.tomorrow.length < 10 ? `0${groups.tomorrow.length}` : groups.tomorrow.length} EVENTS
+        <section className="timeline-block">
+          <div className="timeline-heading-row">
+            <h2 className="timeline-heading">
+              <span>Tomorrow</span>
+            </h2>
+            <span className="timeline-badge">
+              {groups.tomorrow.length} {groups.tomorrow.length === 1 ? 'round' : 'rounds'}
             </span>
           </div>
-          <div className="contest-grid-swiss">
+          <div className="cards-grid">
             {groups.tomorrow.map((contest) => (
               <ContestCard
                 key={contest.id}
@@ -119,21 +104,18 @@ export function ListView({
         </section>
       )}
 
-      {/* 4. This Week Section */}
+      {/* 4. This Week */}
       {groups.thisWeek.length > 0 && (
-        <section className="chrono-section">
-          <div className="chrono-section-header">
-            <div className="chrono-title-group">
-              <span className="chrono-num mono">04 //</span>
-              <h2 className="chrono-heading font-display">
-                THIS WEEK'S HORIZON
-              </h2>
-            </div>
-            <span className="chrono-count-badge mono">
-              {groups.thisWeek.length < 10 ? `0${groups.thisWeek.length}` : groups.thisWeek.length} EVENTS
+        <section className="timeline-block">
+          <div className="timeline-heading-row">
+            <h2 className="timeline-heading">
+              <span>This Week</span>
+            </h2>
+            <span className="timeline-badge">
+              {groups.thisWeek.length} {groups.thisWeek.length === 1 ? 'round' : 'rounds'}
             </span>
           </div>
-          <div className="contest-grid-swiss">
+          <div className="cards-grid">
             {groups.thisWeek.map((contest) => (
               <ContestCard
                 key={contest.id}
@@ -146,21 +128,18 @@ export function ListView({
         </section>
       )}
 
-      {/* 5. Later Section */}
+      {/* 5. Later */}
       {groups.later.length > 0 && (
-        <section className="chrono-section">
-          <div className="chrono-section-header">
-            <div className="chrono-title-group">
-              <span className="chrono-num mono">05 //</span>
-              <h2 className="chrono-heading font-display">
-                LONG-RANGE CHRONO
-              </h2>
-            </div>
-            <span className="chrono-count-badge mono">
-              {groups.later.length < 10 ? `0${groups.later.length}` : groups.later.length} EVENTS
+        <section className="timeline-block">
+          <div className="timeline-heading-row">
+            <h2 className="timeline-heading">
+              <span>Later This Month</span>
+            </h2>
+            <span className="timeline-badge">
+              {groups.later.length} {groups.later.length === 1 ? 'round' : 'rounds'}
             </span>
           </div>
-          <div className="contest-grid-swiss">
+          <div className="cards-grid">
             {groups.later.map((contest) => (
               <ContestCard
                 key={contest.id}

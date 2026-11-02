@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, X, Check, List, Calendar as CalendarIcon, SlidersHorizontal, Terminal } from 'lucide-react';
+import { Search, X, Check, List, Calendar as CalendarIcon, SlidersHorizontal, Filter } from 'lucide-react';
+import { PlatformIcon } from './PlatformIcons';
 
 const COMMON_DIVISIONS = [
   'All',
@@ -34,132 +35,122 @@ export function FilterBar({
   const isAllDivisionsSelected = selectedDivisions.includes('All') || selectedDivisions.length === 0;
 
   return (
-    <div className="swiss-panel filter-console swiss-crosshair">
-      {/* Top Filter Controls: Search, Status, View Switcher */}
-      <div className="filter-console-header">
-        {/* Search Bar with Terminal Styling */}
-        <div className="search-console-wrapper">
-          <Terminal size={15} className="search-console-icon" />
+    <div className="filter-command-panel">
+      {/* Search, Status, and View Toggle Header */}
+      <div className="filter-main-bar">
+        {/* Search input with keyboard indicator */}
+        <div className="search-field-wrap">
+          <Search size={15} className="search-icon" />
           <input
             type="text"
-            className="search-console-input mono"
-            placeholder=">> SEARCH CONTESTS (E.G. DIV 2, WEEKLY, STARTERS)..."
+            className="search-field"
+            placeholder="Filter by contest title, division, or keyword..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
-          {searchQuery && (
+          {searchQuery ? (
             <button
-              className="search-clear-brutal mono"
+              className="search-clear-action"
               onClick={() => onSearchChange('')}
               title="Clear search"
+              aria-label="Clear search"
             >
               <X size={13} />
             </button>
+          ) : (
+            <span className="search-shortcut-hint">/</span>
           )}
         </div>
 
-        {/* Status Toggle Segment Control */}
-        <div className="status-segments">
+        {/* Status Toggle (Segmented control) */}
+        <div className="segmented-control">
           {[
-            { id: 'all', label: '01 / ALL' },
-            { id: 'live', label: '02 / ● LIVE' },
-            { id: 'upcoming', label: '03 / ⏳ UPCOMING' }
+            { id: 'all', label: 'All' },
+            { id: 'live', label: 'Live' },
+            { id: 'upcoming', label: 'Upcoming' }
           ].map((tab) => (
             <button
               key={tab.id}
-              className={`status-segment-btn mono ${statusFilter === tab.id ? 'active' : ''} ${
-                tab.id === 'live' && statusFilter === 'live' ? 'active-live' : ''
+              className={`segmented-tab ${statusFilter === tab.id ? 'is-active' : ''} ${
+                tab.id === 'live' && statusFilter === 'live' ? 'is-live' : ''
               }`}
               onClick={() => onStatusFilterChange(tab.id)}
             >
-              {tab.label}
+              {tab.id === 'live' && <span className="live-pulse-dot-sm" />}
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
 
         {/* View Mode Switcher */}
-        <div className="view-mode-console">
+        <div className="view-toggle-wrap">
           <button
-            className={`view-console-btn mono ${viewMode === 'list' ? 'active' : ''}`}
+            className={`view-toggle-btn ${viewMode === 'list' ? 'is-active' : ''}`}
             onClick={() => onViewModeChange('list')}
-            title="Switch to List Chrono"
+            title="Switch to List View"
           >
             <List size={15} />
-            <span>LIST</span>
+            <span className="hide-mobile">List</span>
           </button>
           <button
-            className={`view-console-btn mono ${viewMode === 'calendar' ? 'active' : ''}`}
+            className={`view-toggle-btn ${viewMode === 'calendar' ? 'is-active' : ''}`}
             onClick={() => onViewModeChange('calendar')}
-            title="Switch to Poster Calendar"
+            title="Switch to Calendar View"
           >
             <CalendarIcon size={15} />
-            <span>CALENDAR</span>
+            <span className="hide-mobile">Calendar</span>
           </button>
         </div>
       </div>
 
-      {/* Platform Filter Section */}
-      <div className="filter-block">
-        <div className="filter-block-header">
-          <div className="filter-block-title-group">
-            <span className="filter-block-index mono">01</span>
-            <span className="filter-block-label font-display">PLATFORM FEEDS</span>
-          </div>
+      {/* Platform Filter Row */}
+      <div className="filter-row">
+        <div className="filter-row-label">
+          <SlidersHorizontal size={13} />
+          <span>Platforms</span>
           <button
             onClick={onSelectAllPlatforms}
-            className="filter-toggle-link mono"
+            className="filter-reset-action"
           >
-            {isAllPlatformsSelected ? '[ DESELECT EXTRAS ]' : '[ SELECT ALL (4/4) ]'}
+            {isAllPlatformsSelected ? 'Reset' : 'Select All'}
           </button>
         </div>
 
-        <div className="platform-badges-grid">
+        <div className="platform-pills">
           {platforms.map((plat) => {
             const isSelected = selectedPlatforms.includes(plat.id);
             const count = contestCountsByPlatform[plat.id] || 0;
 
-            const platformPrefix = {
-              codeforces: 'CF',
-              leetcode: 'LC',
-              codechef: 'CC',
-              atcoder: 'AC'
-            }[plat.id] || plat.name.slice(0, 2).toUpperCase();
-
             return (
               <button
                 key={plat.id}
-                className={`platform-badge-brutal ${isSelected ? 'active' : ''}`}
-                style={{
-                  '--plat-accent': plat.color,
-                }}
+                className={`platform-btn ${isSelected ? 'is-selected' : ''}`}
                 onClick={() => onTogglePlatform(plat.id)}
               >
-                <span className="plat-prefix mono">[{platformPrefix}]</span>
-                <span className="plat-name font-display">{plat.name}</span>
-                <span className="plat-counter mono">{count < 10 ? `0${count}` : count}</span>
-                {isSelected && <Check size={12} strokeWidth={3} className="plat-check" />}
+                <PlatformIcon platform={plat.id} size={15} />
+                <span className="platform-btn-name">{plat.name}</span>
+                <span className="platform-btn-count">{count}</span>
+                {isSelected && <Check size={12} strokeWidth={2.5} className="platform-btn-check" />}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Division Filter Section */}
-      <div className="filter-block">
-        <div className="filter-block-header">
-          <div className="filter-block-title-group">
-            <span className="filter-block-index mono">02</span>
-            <span className="filter-block-label font-display">DIVISIONS & ROUND TYPES</span>
-          </div>
+      {/* Division Filter Row */}
+      <div className="filter-row">
+        <div className="filter-row-label">
+          <Filter size={13} />
+          <span>Divisions</span>
           <button
             onClick={onSelectAllDivisions}
-            className="filter-toggle-link mono"
+            className="filter-reset-action"
           >
-            [ RESET DIVISIONS ]
+            All
           </button>
         </div>
 
-        <div className="division-stamps-grid">
+        <div className="division-pills">
           {COMMON_DIVISIONS.map((div) => {
             const isSelected =
               div === 'All'
@@ -169,7 +160,7 @@ export function FilterBar({
             return (
               <button
                 key={div}
-                className={`division-stamp mono ${isSelected ? 'active' : ''}`}
+                className={`division-tag-btn ${isSelected ? 'is-selected' : ''}`}
                 onClick={() => onToggleDivision(div)}
               >
                 {div}
