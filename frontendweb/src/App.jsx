@@ -7,6 +7,7 @@ import { CalendarView } from './components/CalendarView';
 import { ContestModal } from './components/ContestModal';
 import { DayDetailModal } from './components/DayDetailModal';
 import { getPlatforms, getContests } from './services/api';
+import { WifiOff, RefreshCw, X } from 'lucide-react';
 import './styles/components.css';
 
 export default function App() {
@@ -22,6 +23,8 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isUsingFallback, setIsUsingFallback] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // Initial load
   const loadData = useCallback(async (isRefresh = false) => {
@@ -29,17 +32,22 @@ export default function App() {
     else setIsLoading(true);
 
     try {
-      const [platformList, contestList] = await Promise.all([
+      const [platformResult, contestResult] = await Promise.all([
         getPlatforms(),
         getContests()
       ]);
 
-      setPlatforms(platformList);
-      setAllContests(contestList);
+      setPlatforms(platformResult.data);
+      setAllContests(contestResult.data);
+
+      // If either call fell back to hardcoded data, flag it
+      const fallback = platformResult.isFallback || contestResult.isFallback;
+      setIsUsingFallback(fallback);
+      if (!fallback) setBannerDismissed(false); // reset dismiss when API recovers
 
       // Default select all platforms on first load
-      if (selectedPlatforms.length === 0 && platformList.length > 0) {
-        setSelectedPlatforms(platformList.map((p) => p.id));
+      if (selectedPlatforms.length === 0 && platformResult.data.length > 0) {
+        setSelectedPlatforms(platformResult.data.map((p) => p.id));
       }
     } catch (err) {
       console.error('Error loading initial data:', err);
@@ -191,6 +199,35 @@ export default function App() {
         selectedPlatforms={selectedPlatforms}
         selectedDivisions={selectedDivisions}
       />
+
+      {/* API Down Banner */}
+      {isUsingFallback && !bannerDismissed && (
+        <div className="api-down-banner">
+          <div className="api-down-banner-content">
+            <WifiOff size={16} className="api-down-icon" />
+            <div className="api-down-text">
+              <strong>Backend API is unreachable</strong>
+              <span>Showing hardcoded demo data. Start the backend server to see live contests.</span>
+            </div>
+            <button
+              className="api-down-retry-btn"
+              onClick={() => loadData(true)}
+              disabled={isRefreshing}
+            >
+              <RefreshCw size={13} className={isRefreshing ? 'spin-icon' : ''} />
+              <span>Retry</span>
+            </button>
+            <button
+              className="api-down-dismiss-btn"
+              onClick={() => setBannerDismissed(true)}
+              title="Dismiss"
+              aria-label="Dismiss banner"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <main className="container" style={{ flex: 1, paddingBottom: '60px', marginTop: '24px' }}>

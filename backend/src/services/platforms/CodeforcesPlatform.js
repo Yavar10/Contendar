@@ -52,7 +52,7 @@ export class CodeforcesPlatform extends BasePlatform {
       const response = await fetch('https://codeforces.com/api/contest.list?gym=false', {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'ContestCalendarBot/1.0'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
       clearTimeout(timeoutId);
@@ -67,15 +67,18 @@ export class CodeforcesPlatform extends BasePlatform {
       }
 
       const now = Date.now();
-      // Keep contests that are BEFORE, CODING (live), or recently finished (last 12 hours)
+      // Keep contests that are upcoming (phase === 'BEFORE'), live (CODING), or recently active
       const contests = data.result
         .filter((c) => {
+          if (!c.startTimeSeconds || isNaN(c.startTimeSeconds)) return false;
           const startTimeMs = c.startTimeSeconds * 1000;
-          const endTimeMs = startTimeMs + c.durationSeconds * 1000;
+          const durationSeconds = c.durationSeconds || 7200;
+          const endTimeMs = startTimeMs + durationSeconds * 1000;
           return endTimeMs > now - 12 * 3600 * 1000;
         })
         .map((c) => {
           const startTimeMs = c.startTimeSeconds * 1000;
+          const durationSeconds = c.durationSeconds || 7200;
           const divisions = this.parseDivisions(c.name);
 
           return this.createContest({
@@ -83,13 +86,14 @@ export class CodeforcesPlatform extends BasePlatform {
             title: c.name,
             url: `https://codeforces.com/contest/${c.id}`,
             startTimeMs,
-            durationSeconds: c.durationSeconds,
+            durationSeconds,
             divisions,
             type: c.type || 'Standard',
             description: `Codeforces Round. Phase: ${c.phase}`
           });
         });
 
+      contests.sort((a, b) => a.startTimeMs - b.startTimeMs);
       return contests;
     } catch (err) {
       console.error('[CodeforcesPlatform] Error fetching contests:', err.message);

@@ -1,55 +1,33 @@
 /**
- * API service for fetching platforms and contests
+ * API service for fetching platforms and contests.
+ *
+ * Every fetch function returns { data, isFallback }.
+ *   data       – the array of results
+ *   isFallback – true when the backend was unreachable and hardcoded demo data is served
  */
 
 const API_BASE = '/api';
 
+/**
+ * Fetch platform metadata from the backend.
+ * Falls back to hardcoded list when the server is down.
+ */
 export async function getPlatforms() {
   try {
     const res = await fetch(`${API_BASE}/platforms`);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
-    return data.data || [];
+    return { data: data.data || [], isFallback: false };
   } catch (err) {
     console.error('Failed to load platforms from API, using fallback:', err);
-    // Safe client-side fallback if backend connection drops
-    return [
-      {
-        id: 'codeforces',
-        name: 'Codeforces',
-        color: '#3b82f6',
-        badgeBg: 'rgba(59, 130, 246, 0.15)',
-        website: 'https://codeforces.com/contests',
-        availableDivisions: ['All', 'Div. 1', 'Div. 2', 'Div. 3', 'Div. 4', 'Educational', 'Global']
-      },
-      {
-        id: 'leetcode',
-        name: 'LeetCode',
-        color: '#f59e0b',
-        badgeBg: 'rgba(245, 158, 11, 0.15)',
-        website: 'https://leetcode.com/contest/',
-        availableDivisions: ['All', 'Weekly', 'Biweekly']
-      },
-      {
-        id: 'codechef',
-        name: 'CodeChef',
-        color: '#a855f7',
-        badgeBg: 'rgba(168, 85, 247, 0.15)',
-        website: 'https://www.codechef.com/contests',
-        availableDivisions: ['All', 'Div. 1', 'Div. 2', 'Div. 3', 'Div. 4', 'Starters']
-      },
-      {
-        id: 'atcoder',
-        name: 'AtCoder',
-        color: '#06b6d4',
-        badgeBg: 'rgba(6, 182, 212, 0.15)',
-        website: 'https://atcoder.jp/contests/',
-        availableDivisions: ['All', 'ABC (Beginner)', 'ARC (Regular)', 'AGC (Grand)', 'AHC (Heuristic)']
-      }
-    ];
+    return { data: FALLBACK_PLATFORMS, isFallback: true };
   }
 }
 
+/**
+ * Fetch contests from the backend with optional filters.
+ * Falls back to hardcoded demo contests when the server is down.
+ */
 export async function getContests({ platforms = [], divisions = [], status = 'all', search = '' } = {}) {
   try {
     const params = new URLSearchParams();
@@ -69,12 +47,49 @@ export async function getContests({ platforms = [], divisions = [], status = 'al
     const res = await fetch(`${API_BASE}/contests?${params.toString()}`);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
-    return data.data || [];
+    return { data: data.data || [], isFallback: false };
   } catch (err) {
-    console.warn('Backend API unavailable, serving realistic mock CP feed:', err.message);
-    return generateFallbackContests();
+    console.warn('Backend API unavailable, serving hardcoded demo data:', err.message);
+    return { data: generateFallbackContests(), isFallback: true };
   }
 }
+
+// ─── Hardcoded Fallback Data ─────────────────────────────────────────────────
+
+const FALLBACK_PLATFORMS = [
+  {
+    id: 'codeforces',
+    name: 'Codeforces',
+    color: '#3b82f6',
+    badgeBg: 'rgba(59, 130, 246, 0.15)',
+    website: 'https://codeforces.com/contests',
+    availableDivisions: ['All', 'Div. 1', 'Div. 2', 'Div. 3', 'Div. 4', 'Educational', 'Global']
+  },
+  {
+    id: 'leetcode',
+    name: 'LeetCode',
+    color: '#f59e0b',
+    badgeBg: 'rgba(245, 158, 11, 0.15)',
+    website: 'https://leetcode.com/contest/',
+    availableDivisions: ['All', 'Weekly', 'Biweekly']
+  },
+  {
+    id: 'codechef',
+    name: 'CodeChef',
+    color: '#a855f7',
+    badgeBg: 'rgba(168, 85, 247, 0.15)',
+    website: 'https://www.codechef.com/contests',
+    availableDivisions: ['All', 'Div. 1', 'Div. 2', 'Div. 3', 'Div. 4', 'Starters']
+  },
+  {
+    id: 'atcoder',
+    name: 'AtCoder',
+    color: '#06b6d4',
+    badgeBg: 'rgba(6, 182, 212, 0.15)',
+    website: 'https://atcoder.jp/contests/',
+    availableDivisions: ['All', 'ABC (Beginner)', 'ARC (Regular)', 'AGC (Grand)', 'AHC (Heuristic)']
+  }
+];
 
 function generateFallbackContests() {
   const now = Date.now();
