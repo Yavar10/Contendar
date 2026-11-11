@@ -70,7 +70,10 @@ ContestCalender/
 │   ├── index.html
 │   └── vite.config.js                 # Configured with proxy to backend port 5000
 │
-└── native/                            # Reserved for React Native conversion
+└── native/                            # React Native (Expo) Mobile Application
+    ├── src/                           # Mobile components, services, and utils
+    ├── App.js                         # Root mobile entry point
+    └── app.json                       # Expo application manifest
 ```
 
 ---
@@ -91,6 +94,14 @@ cd frontendweb
 npm install
 npm run dev
 # Frontend runs at http://localhost:5173
+```
+
+### 3. Start the Mobile App (React Native via Expo)
+```bash
+cd native
+npm install
+npm start
+# Press 'a' for Android, 'i' for iOS, or scan the QR code with Expo Go!
 ```
 
 ---

@@ -272,13 +272,17 @@ The system parses division tags automatically from platform contest metadata and
 
 ---
 
-## 📱 Preparing for React Native
+## 📱 React Native Mobile App (Expo)
 
-When ready to develop the mobile app in the `native/` folder:
-1. **Reuse Backend**: The Express.js backend serves as a headless API for both the Web and Mobile apps without changes.
-2. **Reuse Business Logic**: The utilities in `frontendweb/src/utils/timeUtils.js` (countdowns, formatting, timezone math) and `frontendweb/src/services/api.js` are pure JavaScript and can be copied directly to React Native.
-3. **Component Mapping**:
-   - `<div>` / `<section>` ➡️ `<View>`
-   - `<span>` / `<p>` / `<h1>` ➡️ `<Text>`
-   - `<button>` ➡️ `<TouchableOpacity>` or `<Pressable>`
-   - Calendar & List grids ➡️ `FlatList` / `ScrollView` / `react-native-calendars`
+The mobile application is located in the [`native/`](file:///d:/Projects/ContestCalender/native) folder and built with Expo SDK 58:
+1. **Headless Backend**: The Express.js backend serves as a headless API for both the Web and Mobile apps.
+2. **Shared Business Logic**: The utilities in [`src/utils/timeUtils.js`](file:///d:/Projects/ContestCalender/native/src/utils/timeUtils.js) (countdowns, formatting, timezone math) and [`src/services/api.js`](file:///d:/Projects/ContestCalender/native/src/services/api.js) power real-time updates and fallback resilience.
+3. **How to Run**:
+   ```bash
+   cd native
+   npm install
+   npm start
+   ```
+   - Press `a` to run on Android emulator or connected device.
+   - Press `i` to run on iOS simulator (macOS required).
+   - Scan the terminal QR code with the **Expo Go** app on your physical device.
