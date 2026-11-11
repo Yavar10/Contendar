@@ -20,9 +20,9 @@ export function setApiBaseUrl(url) {
 }
 
 /**
- * Fetch helper with timeout
+ * Fetch helper with timeout (10 seconds default for mobile resilience)
  */
-async function fetchWithTimeout(url, options = {}, timeoutMs = 3500) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -45,7 +45,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 3500) {
 export async function testServerConnection(baseUrl = configuredApiBase) {
   const cleanUrl = baseUrl.replace(/\/+$/, '');
   try {
-    const res = await fetchWithTimeout(`${cleanUrl}/api/health`, {}, 3000);
+    const res = await fetchWithTimeout(`${cleanUrl}/api/health`, {}, 8000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return { success: true, message: data.message || 'Connected successfully' };
@@ -60,7 +60,7 @@ export async function testServerConnection(baseUrl = configuredApiBase) {
 export async function getPlatforms(baseUrl = configuredApiBase) {
   const cleanUrl = baseUrl.replace(/\/+$/, '');
   try {
-    const res = await fetchWithTimeout(`${cleanUrl}/api/platforms`, {}, 3500);
+    const res = await fetchWithTimeout(`${cleanUrl}/api/platforms`, {}, 10000);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
     return { data: data.data || [], error: null, success: true };
@@ -98,7 +98,7 @@ export async function getContests({
 
     const queryStr = params.toString();
     const endpoint = `${cleanUrl}/api/contests${queryStr ? `?${queryStr}` : ''}`;
-    const res = await fetchWithTimeout(endpoint, {}, 4000);
+    const res = await fetchWithTimeout(endpoint, {}, 12000);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
     return { data: data.data || [], error: null, success: true };

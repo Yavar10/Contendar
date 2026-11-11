@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "CONTENDAR",
+    "name": "Contendar",
     "slug": "contendar",
     "version": "1.0.0",
     "scheme": "contendar",
@@ -8,6 +8,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#000000",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.contendar.app",
@@ -20,6 +25,10 @@
     },
     "android": {
       "package": "com.contendar.app",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#000000",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -33,6 +42,28 @@
     "plugins": [
       "@bacons/apple-targets",
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "bundleIdentifier": "com.contendar.app.widget",
+                  "targetName": "ContendarWidget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.contendar.app"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "eeb3697d-95bd-4dbe-9a51-ef2f907da0a7"
+      }
+    }
   }
 }
