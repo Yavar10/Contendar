@@ -31,7 +31,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "expo-status-bar"
     ]
   }
 }
