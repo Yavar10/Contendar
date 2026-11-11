@@ -14,6 +14,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 
 import { Header } from './src/components/Header';
 import { SearchBar } from './src/components/SearchBar';
+import { RadarHero } from './src/components/RadarHero';
 import { ViewSwitcher } from './src/components/ViewSwitcher';
 import { PlatformChips } from './src/components/PlatformChips';
 import { ActiveFiltersRow } from './src/components/ActiveFiltersRow';
@@ -36,7 +37,7 @@ export default function App() {
   const [selectedDivisions, setSelectedDivisions] = useState(['All']);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'live' | 'upcoming'
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
+  const [viewMode, setViewMode] = useState('calendar'); // Default to 'calendar' so calendar fits on starting screen
   const [timezone, setTimezone] = useState('local');
 
   // UI state
@@ -247,7 +248,7 @@ export default function App() {
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <StatusBar style="light" backgroundColor={COLORS.bgPrimary} />
 
-        {/* 1. Header (Brand, live badge, search toggle, filter trigger, settings trigger) */}
+        {/* 1. Apple-style Top Header */}
         <Header
           liveCount={liveCount}
           isSearchVisible={isSearchVisible}
@@ -272,37 +273,7 @@ export default function App() {
           }}
         />
 
-        {/* 3. Sleek View Switcher (Timeline | Calendar) */}
-        <ViewSwitcher viewMode={viewMode} onViewModeChange={setViewMode} />
-
-        {/* 4. Single-Row Platform Chips */}
-        {platforms.length > 0 && (
-          <PlatformChips
-            platforms={platforms}
-            selectedPlatforms={selectedPlatforms}
-            onTogglePlatform={handleTogglePlatform}
-            onSelectAllPlatforms={handleSelectAllPlatforms}
-            contestCountsByPlatform={contestCountsByPlatform}
-          />
-        )}
-
-        {/* 5. Active Filters Row (only renders when filters exist) */}
-        <ActiveFiltersRow
-          statusFilter={statusFilter}
-          onResetStatus={() => setStatusFilter('all')}
-          selectedDivisions={selectedDivisions}
-          onRemoveDivision={handleRemoveDivision}
-          searchQuery={searchQuery}
-          onClearSearch={() => setSearchQuery('')}
-          onResetAll={handleResetAllFilters}
-        />
-
-        {/* 6. Minimal Telemetry Ticker (only when loaded) */}
-        {!apiError && (
-          <TelemetryTicker contests={filteredContests} platforms={platforms} />
-        )}
-
-        {/* 7. Main Scrollable Content */}
+        {/* 3. Main Scrollable Dashboard */}
         <ScrollView
           style={styles.mainScroll}
           contentContainerStyle={styles.mainScrollContent}
@@ -311,14 +282,51 @@ export default function App() {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={() => loadData(true)}
-              tintColor={COLORS.accentBlue}
-              colors={[COLORS.accentBlue]}
+              tintColor={COLORS.appleBlue}
+              colors={[COLORS.appleBlue]}
             />
           }
         >
+          {/* A. Graphic Up Top: Alive Radar Hero Section */}
+          {!apiError && (
+            <RadarHero
+              contests={allContests}
+              onSelectContest={setSelectedContest}
+              nowMs={nowMs}
+            />
+          )}
+
+          {/* B. Platform Frosted Glass Pills */}
+          {platforms.length > 0 && (
+            <PlatformChips
+              platforms={platforms}
+              selectedPlatforms={selectedPlatforms}
+              onTogglePlatform={handleTogglePlatform}
+              onSelectAllPlatforms={handleSelectAllPlatforms}
+              contestCountsByPlatform={contestCountsByPlatform}
+            />
+          )}
+
+          {/* C. Active Filters Row (if any) */}
+          <ActiveFiltersRow
+            statusFilter={statusFilter}
+            onResetStatus={() => setStatusFilter('all')}
+            selectedDivisions={selectedDivisions}
+            onRemoveDivision={handleRemoveDivision}
+            searchQuery={searchQuery}
+            onClearSearch={() => setSearchQuery('')}
+            onResetAll={handleResetAllFilters}
+          />
+
+          {/* D. Segmented View Switcher: Calendar View vs Timeline */}
+          {!apiError && (
+            <ViewSwitcher viewMode={viewMode} onViewModeChange={setViewMode} />
+          )}
+
+          {/* E. Content: Calendar View Fitted at Bottom of Starting Screen, or Timeline */}
           {isLoading ? (
             <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color={COLORS.accentBlue} />
+              <ActivityIndicator size="large" color={COLORS.appleBlue} />
               <Text style={styles.loadingTitle}>Connecting to Radar Feeds...</Text>
               <Text style={styles.loadingSubtitle}>
                 Aggregating Codeforces, LeetCode, CodeChef, and AtCoder
@@ -328,7 +336,7 @@ export default function App() {
             /* Backend API Down Prompt Card */
             <View style={styles.errorCard}>
               <View style={styles.errorIconBox}>
-                <Feather name="wifi-off" size={28} color={COLORS.accentRed} />
+                <Feather name="wifi-off" size={28} color={COLORS.appleRed} />
               </View>
               <Text style={styles.errorTitle}>Backend Server Unreachable</Text>
               <Text style={styles.errorDesc}>
@@ -362,20 +370,21 @@ export default function App() {
                 </TouchableOpacity>
               </View>
             </View>
-          ) : viewMode === 'list' ? (
+          ) : viewMode === 'calendar' ? (
+            /* Fits the Calendar in the Starting Screen at the Bottom */
+            <CalendarView
+              contests={filteredContests}
+              timezone={timezone}
+              onSelectContest={setSelectedContest}
+              onSelectDay={setSelectedDay}
+            />
+          ) : (
             <ListView
               contests={filteredContests}
               timezone={timezone}
               onSelectContest={setSelectedContest}
               onResetFilters={handleResetAllFilters}
               nowMs={nowMs}
-            />
-          ) : (
-            <CalendarView
-              contests={filteredContests}
-              timezone={timezone}
-              onSelectContest={setSelectedContest}
-              onSelectDay={setSelectedDay}
             />
           )}
         </ScrollView>
@@ -440,18 +449,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgPrimary
   },
   mainScrollContent: {
-    paddingBottom: 32
+    paddingBottom: 28
   },
   loadingBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 48,
+    padding: 40,
     marginHorizontal: 16,
-    marginTop: 24,
+    marginTop: 18,
     backgroundColor: COLORS.bgCard,
     borderWidth: 1,
     borderColor: COLORS.borderSubtle,
-    borderRadius: 16
+    borderRadius: 18
   },
   loadingTitle: {
     color: COLORS.textPrimary,
@@ -470,17 +479,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 28,
     marginHorizontal: 16,
-    marginTop: 24,
-    backgroundColor: 'rgba(239, 68, 68, 0.04)',
+    marginTop: 20,
+    backgroundColor: 'rgba(255, 69, 58, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.25)',
-    borderRadius: 16
+    borderColor: 'rgba(255, 69, 58, 0.25)',
+    borderRadius: 18
   },
   errorIconBox: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    backgroundColor: 'rgba(255, 69, 58, 0.14)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12
@@ -499,20 +508,20 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   errorUrl: {
-    color: COLORS.accentRed,
+    color: COLORS.appleRed,
     fontWeight: '700'
   },
   terminalBox: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    borderRadius: 8,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 16
   },
   terminalText: {
-    color: COLORS.accentBlue,
+    color: COLORS.appleBlue,
     fontSize: 11,
     fontFamily: 'monospace',
     fontWeight: '600'
@@ -526,10 +535,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: COLORS.accentBlue,
+    backgroundColor: COLORS.appleBlue,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: 8
+    borderRadius: 10
   },
   retryBtnText: {
     color: '#fff',
@@ -540,12 +549,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: 12,
     paddingVertical: 9,
-    borderRadius: 8
+    borderRadius: 10
   },
   configBtnText: {
     color: COLORS.textPrimary,

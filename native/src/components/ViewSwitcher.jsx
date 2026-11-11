@@ -1,11 +1,26 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
 export function ViewSwitcher({ viewMode, onViewModeChange }) {
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={[styles.tab, viewMode === 'calendar' && styles.tabActive]}
+        onPress={() => onViewModeChange('calendar')}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name="calendar"
+          size={13}
+          color={viewMode === 'calendar' ? COLORS.appleBlue : COLORS.textMuted}
+        />
+        <Text style={[styles.tabText, viewMode === 'calendar' && styles.tabTextActive]}>
+          Calendar View
+        </Text>
+      </TouchableOpacity>
+
       <TouchableOpacity
         style={[styles.tab, viewMode === 'list' && styles.tabActive]}
         onPress={() => onViewModeChange('list')}
@@ -13,26 +28,11 @@ export function ViewSwitcher({ viewMode, onViewModeChange }) {
       >
         <Feather
           name="list"
-          size={14}
-          color={viewMode === 'list' ? COLORS.accentBlue : COLORS.textMuted}
+          size={13}
+          color={viewMode === 'list' ? COLORS.appleBlue : COLORS.textMuted}
         />
         <Text style={[styles.tabText, viewMode === 'list' && styles.tabTextActive]}>
           Timeline
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.tab, viewMode === 'calendar' && styles.tabActive]}
-        onPress={() => onViewModeChange('calendar')}
-        activeOpacity={0.7}
-      >
-        <Feather
-          name="calendar"
-          size={14}
-          color={viewMode === 'calendar' ? COLORS.accentBlue : COLORS.textMuted}
-        />
-        <Text style={[styles.tabText, viewMode === 'calendar' && styles.tabTextActive]}>
-          Calendar
         </Text>
       </TouchableOpacity>
     </View>
@@ -42,13 +42,12 @@ export function ViewSwitcher({ viewMode, onViewModeChange }) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    borderRadius: 12,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 14,
     marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 6,
+    marginVertical: 4,
     padding: 3
   },
   tab: {
@@ -58,12 +57,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 7,
-    borderRadius: 9
+    borderRadius: 11
   },
   tabActive: {
-    backgroundColor: COLORS.bgCardHover,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.35)'
+    borderColor: 'rgba(10, 132, 255, 0.4)'
   },
   tabText: {
     color: COLORS.textMuted,
@@ -71,8 +70,7 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   tabTextActive: {
-    color: COLORS.textPrimary,
+    color: '#fff',
     fontWeight: '700'
   }
 });
-

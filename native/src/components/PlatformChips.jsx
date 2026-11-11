@@ -34,7 +34,7 @@ export function PlatformChips({
         {platforms.map((platform) => {
           const isSelected = selectedPlatforms.includes(platform.id);
           const count = contestCountsByPlatform[platform.id] || 0;
-          const brandColor = platform.color || COLORS.accentBlue;
+          const brandColor = platform.color || COLORS.appleBlue;
 
           return (
             <TouchableOpacity
@@ -43,7 +43,7 @@ export function PlatformChips({
                 styles.chip,
                 isSelected && {
                   borderColor: brandColor,
-                  backgroundColor: platform.badgeBg || 'rgba(59, 130, 246, 0.12)'
+                  backgroundColor: platform.badgeBg || 'rgba(10, 132, 255, 0.15)'
                 }
               ]}
               onPress={() => onTogglePlatform(platform.id)}
@@ -82,16 +82,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: COLORS.bgCard,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    paddingHorizontal: 10,
+    borderColor: 'rgba(255, 255, 255, 0.09)',
+    paddingHorizontal: 11,
     paddingVertical: 6,
-    borderRadius: 14
+    borderRadius: 16
   },
   chipAllActive: {
-    borderColor: COLORS.accentBlue,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)'
+    borderColor: COLORS.appleBlue,
+    backgroundColor: 'rgba(10, 132, 255, 0.18)'
   },
   chipText: {
     color: COLORS.textSecondary,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   chipTextAllActive: {
-    color: COLORS.accentBlue,
+    color: '#fff',
     fontWeight: '700'
   },
   countBadge: {
@@ -114,4 +114,3 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   }
 });
-
