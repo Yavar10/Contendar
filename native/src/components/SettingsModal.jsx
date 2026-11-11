@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Modal,
   View,
   Text,
   StyleSheet,
@@ -9,10 +8,11 @@ import {
   TextInput,
   ActivityIndicator
 } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 import { TIMEZONES } from '../utils/timeUtils';
 import { getApiBaseUrl, setApiBaseUrl, testServerConnection } from '../services/api';
+import { AppleBottomSheet } from './AppleBottomSheet';
 
 export function SettingsModal({
   visible,
@@ -41,218 +41,189 @@ export function SettingsModal({
   };
 
   return (
-    <Modal
+    <AppleBottomSheet
       visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
+      onClose={onClose}
+      maxHeight="86%"
     >
-      <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.dismissOverlay} onPress={onClose} activeOpacity={1} />
+      {/* Navigation Bar */}
+      <View style={styles.header}>
+        <View style={styles.headerSpacer} />
+        <Text style={styles.headerTitle}>Settings</Text>
+        <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.6}>
+          <Text style={styles.doneBtnText}>Done</Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.sheetContainer}>
-          <View style={styles.grabHandle} />
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.bodyContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Group 1: Feed Connection Status */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>DATA FEEDS</Text>
+          <View style={styles.groupedTable}>
+            <View style={styles.tableRow}>
+              <View style={styles.statusRowLeft}>
+                <View
+                  style={[
+                    styles.statusDot,
+                    { backgroundColor: hasApiError ? COLORS.systemRed : COLORS.systemGreen }
+                  ]}
+                />
+                <View>
+                  <Text style={styles.rowLabel}>
+                    {hasApiError ? 'Backend Disconnected' : 'Live Feeds Active'}
+                  </Text>
+                  <Text style={styles.rowSubLabel}>
+                    {hasApiError ? 'Server is unreachable' : 'Auto-refreshing every 3 min'}
+                  </Text>
+                </View>
+              </View>
 
-          {/* Navigation Bar */}
-          <View style={styles.header}>
-            <View style={styles.headerSpacer} />
-            <Text style={styles.headerTitle}>Settings</Text>
-            <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.6}>
-              <Text style={styles.doneBtnText}>Done</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.syncBtn}
+                onPress={onRefresh}
+                disabled={isRefreshing}
+                activeOpacity={0.6}
+              >
+                {isRefreshing ? (
+                  <ActivityIndicator size="small" color={COLORS.systemBlue} />
+                ) : (
+                  <Text style={styles.syncBtnText}>Sync Now</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
+        </View>
 
-          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-            {/* Group 1: Feed Connection Status */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>DATA FEEDS</Text>
-              <View style={styles.groupedTable}>
-                <View style={styles.tableRow}>
-                  <View style={styles.statusRowLeft}>
-                    <View
-                      style={[
-                        styles.statusDot,
-                        { backgroundColor: hasApiError ? COLORS.systemRed : COLORS.systemGreen }
-                      ]}
-                    />
+        {/* Group 2: Timezone Preference */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>TIMEZONE</Text>
+          <View style={styles.groupedTable}>
+            {TIMEZONES.map((tz, index) => {
+              const isSelected = currentTimezone === tz.id;
+              const isLast = index === TIMEZONES.length - 1;
+
+              return (
+                <React.Fragment key={tz.id}>
+                  <TouchableOpacity
+                    style={styles.tableRow}
+                    onPress={() => onSelectTimezone(tz.id)}
+                    activeOpacity={0.6}
+                  >
                     <View>
-                      <Text style={styles.rowLabel}>
-                        {hasApiError ? 'Backend Disconnected' : 'Live Feeds Active'}
-                      </Text>
+                      <Text style={styles.rowLabel}>{tz.label}</Text>
                       <Text style={styles.rowSubLabel}>
-                        {hasApiError ? 'Server is unreachable' : 'Auto-refreshing every 3 min'}
+                        {tz.offset ? `UTC ${tz.offset}` : 'System Device Time'}
                       </Text>
                     </View>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.syncBtn}
-                    onPress={onRefresh}
-                    disabled={isRefreshing}
-                    activeOpacity={0.6}
-                  >
-                    {isRefreshing ? (
-                      <ActivityIndicator size="small" color={COLORS.systemBlue} />
-                    ) : (
-                      <Text style={styles.syncBtnText}>Sync Now</Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={18} color={COLORS.systemBlue} />
                     )}
                   </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-
-            {/* Group 2: Timezone Preference */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>TIMEZONE</Text>
-              <View style={styles.groupedTable}>
-                {TIMEZONES.map((tz, index) => {
-                  const isSelected = currentTimezone === tz.id;
-                  const isLast = index === TIMEZONES.length - 1;
-
-                  return (
-                    <React.Fragment key={tz.id}>
-                      <TouchableOpacity
-                        style={styles.tableRow}
-                        onPress={() => onSelectTimezone(tz.id)}
-                        activeOpacity={0.6}
-                      >
-                        <View>
-                          <Text style={styles.rowLabel}>{tz.label}</Text>
-                          <Text style={styles.rowSubLabel}>
-                            {tz.offset ? `UTC ${tz.offset}` : 'System Device Time'}
-                          </Text>
-                        </View>
-                        {isSelected && (
-                          <Ionicons name="checkmark" size={18} color={COLORS.systemBlue} />
-                        )}
-                      </TouchableOpacity>
-                      {!isLast && <View style={styles.separator} />}
-                    </React.Fragment>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Group 3: Server Configuration */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>SERVER CONFIGURATION</Text>
-              <View style={styles.groupedTable}>
-                <View style={styles.inputRow}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={urlInput}
-                    onChangeText={(t) => {
-                      setUrlInput(t);
-                      setTestResult(null);
-                    }}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    placeholder="http://192.168.1.X:5000"
-                    placeholderTextColor={COLORS.tertiaryLabel}
-                  />
-                  <TouchableOpacity style={styles.applyInputBtn} onPress={handleSaveUrl} activeOpacity={0.7}>
-                    <Text style={styles.applyInputBtnText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.separator} />
-
-                {/* Presets Row */}
-                <View style={styles.presetsRow}>
-                  <TouchableOpacity
-                    style={styles.presetChip}
-                    onPress={() => {
-                      setUrlInput('http://10.0.2.2:5000');
-                      setTestResult(null);
-                    }}
-                    activeOpacity={0.6}
-                  >
-                    <Text style={styles.presetText}>10.0.2.2 (Android)</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.presetChip}
-                    onPress={() => {
-                      setUrlInput('http://localhost:5000');
-                      setTestResult(null);
-                    }}
-                    activeOpacity={0.6}
-                  >
-                    <Text style={styles.presetText}>localhost:5000</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.separator} />
-
-                {/* Test Server Row */}
-                <View style={styles.tableRow}>
-                  <TouchableOpacity
-                    style={styles.testBtn}
-                    onPress={handleTest}
-                    disabled={testing}
-                    activeOpacity={0.6}
-                  >
-                    {testing ? (
-                      <ActivityIndicator size="small" color={COLORS.systemBlue} />
-                    ) : (
-                      <Text style={styles.testBtnText}>Test Server Connection</Text>
-                    )}
-                  </TouchableOpacity>
-
-                  {Boolean(testResult) && (
-                    <Text
-                      style={[
-                        styles.testResultText,
-                        testResult.success ? styles.testSuccess : styles.testError
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {testResult.success ? 'Online' : 'Failed'}
-                    </Text>
-                  )}
-                </View>
-              </View>
-            </View>
-
-            {/* Group 4: About Footer */}
-            <View style={styles.aboutFooter}>
-              <Text style={styles.aboutTitle}>Contendar</Text>
-              <Text style={styles.aboutVersion}>Version 1.0.0 (Apple HIG Edition)</Text>
-              <Text style={styles.aboutDesc}>
-                Precision competitive programming radar tracking Codeforces, LeetCode, CodeChef, and AtCoder.
-              </Text>
-            </View>
-          </ScrollView>
+                  {!isLast && <View style={styles.separator} />}
+                </React.Fragment>
+              );
+            })}
+          </View>
         </View>
-      </View>
-    </Modal>
+
+        {/* Group 3: Server Configuration */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>SERVER CONFIGURATION</Text>
+          <View style={styles.groupedTable}>
+            <View style={styles.inputRow}>
+              <TextInput
+                style={styles.textInput}
+                value={urlInput}
+                onChangeText={(t) => {
+                  setUrlInput(t);
+                  setTestResult(null);
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder="http://192.168.1.X:5000"
+                placeholderTextColor={COLORS.tertiaryLabel}
+              />
+              <TouchableOpacity style={styles.applyInputBtn} onPress={handleSaveUrl} activeOpacity={0.7}>
+                <Text style={styles.applyInputBtnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.separator} />
+
+            {/* Presets Row */}
+            <View style={styles.presetsRow}>
+              <TouchableOpacity
+                style={styles.presetChip}
+                onPress={() => {
+                  setUrlInput('http://10.0.2.2:5000');
+                  setTestResult(null);
+                }}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.presetText}>10.0.2.2 (Android)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.presetChip}
+                onPress={() => {
+                  setUrlInput('http://localhost:5000');
+                  setTestResult(null);
+                }}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.presetText}>localhost:5000</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.separator} />
+
+            {/* Test Server Row */}
+            <View style={styles.tableRow}>
+              <TouchableOpacity
+                style={styles.testBtn}
+                onPress={handleTest}
+                disabled={testing}
+                activeOpacity={0.6}
+              >
+                {testing ? (
+                  <ActivityIndicator size="small" color={COLORS.systemBlue} />
+                ) : (
+                  <Text style={styles.testBtnText}>Test Server Connection</Text>
+                )}
+              </TouchableOpacity>
+
+              {Boolean(testResult) && (
+                <Text
+                  style={[
+                    styles.testResultText,
+                    testResult.success ? styles.testSuccess : styles.testError
+                  ]}
+                  numberOfLines={1}
+                >
+                  {testResult.success ? 'Online' : 'Failed'}
+                </Text>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* Group 4: About Footer */}
+        <View style={styles.aboutFooter}>
+          <Text style={styles.aboutTitle}>Contendar</Text>
+          <Text style={styles.aboutVersion}>Version 1.0.0 (Apple HIG Edition)</Text>
+          <Text style={styles.aboutDesc}>
+            Precision competitive programming radar tracking Codeforces, LeetCode, CodeChef, and AtCoder.
+          </Text>
+        </View>
+      </ScrollView>
+    </AppleBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    justifyContent: 'flex-end'
-  },
-  dismissOverlay: {
-    flex: 1
-  },
-  sheetContainer: {
-    backgroundColor: COLORS.secondarySystemBackground,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '85%',
-    paddingBottom: 28
-  },
-  grabHandle: {
-    width: 36,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 4
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -280,6 +251,9 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: 20
+  },
+  bodyContent: {
+    paddingBottom: 28
   },
   section: {
     marginBottom: 20

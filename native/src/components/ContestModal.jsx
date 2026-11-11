@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
   View,
   Text,
   StyleSheet,
@@ -17,29 +16,32 @@ import {
   copyContestLink
 } from '../utils/calendarSync';
 import { PlatformIcon } from './PlatformIcons';
+import { AppleBottomSheet } from './AppleBottomSheet';
 
 export function ContestModal({ contest, timezone, onClose }) {
-  if (!contest) return null;
-
   const [nowMs, setNowMs] = useState(Date.now());
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (!contest) return;
     const timer = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [Boolean(contest)]);
 
-  const countdown = getCountdown(
-    contest.startTimeMs,
-    contest.status,
-    nowMs,
-    contest.startTimeMs,
-    contest.endTimeMs
-  );
+  const isLive = contest?.status === 'LIVE';
 
-  const isLive = contest.status === 'LIVE';
+  const countdown = contest
+    ? getCountdown(
+        contest.startTimeMs,
+        contest.status,
+        nowMs,
+        contest.startTimeMs,
+        contest.endTimeMs
+      )
+    : null;
 
   const handleCopy = async () => {
+    if (!contest) return;
     const ok = await copyContestLink(contest);
     if (ok) {
       setCopied(true);
@@ -48,18 +50,13 @@ export function ContestModal({ contest, timezone, onClose }) {
   };
 
   return (
-    <Modal
+    <AppleBottomSheet
       visible={Boolean(contest)}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
+      onClose={onClose}
+      maxHeight="86%"
     >
-      <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.dismissOverlay} onPress={onClose} activeOpacity={1} />
-
-        <View style={styles.sheetContainer}>
-          <View style={styles.grabHandle} />
-
+      {Boolean(contest) && (
+        <>
           {/* Apple Navigation Bar */}
           <View style={styles.header}>
             <View style={styles.headerPlatform}>
@@ -72,35 +69,41 @@ export function ContestModal({ contest, timezone, onClose }) {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.body}
+            contentContainerStyle={styles.bodyContent}
+            showsVerticalScrollIndicator={false}
+          >
             {/* Contest Title */}
             <Text style={styles.title}>{contest.title}</Text>
 
             {/* Countdown Banner */}
-            <View style={[styles.timerBanner, isLive && styles.timerBannerLive]}>
-              <View style={styles.timerContent}>
-                <Text style={[styles.timerLabel, isLive && styles.timerLabelLive]}>
-                  {isLive ? 'ENDS IN' : 'STARTS IN'}
-                </Text>
-                <Text style={[styles.timerValue, isLive && styles.timerValueLive]}>
-                  {countdown.label.replace(/^(Starts in |Ends in )/i, '')}
-                </Text>
-              </View>
+            {Boolean(countdown) && (
+              <View style={[styles.timerBanner, isLive && styles.timerBannerLive]}>
+                <View style={styles.timerContent}>
+                  <Text style={[styles.timerLabel, isLive && styles.timerLabelLive]}>
+                    {isLive ? 'ENDS IN' : 'STARTS IN'}
+                  </Text>
+                  <Text style={[styles.timerValue, isLive && styles.timerValueLive]}>
+                    {countdown.label.replace(/^(Starts in |Ends in )/i, '')}
+                  </Text>
+                </View>
 
-              {isLive ? (
-                <View style={styles.liveBadge}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.liveBadgeText}>LIVE</Text>
-                </View>
-              ) : (
-                <View style={styles.upcomingBadge}>
-                  <Text style={styles.upcomingBadgeText}>UPCOMING</Text>
-                </View>
-              )}
-            </View>
+                {isLive ? (
+                  <View style={styles.liveBadge}>
+                    <View style={styles.liveDot} />
+                    <Text style={styles.liveBadgeText}>LIVE</Text>
+                  </View>
+                ) : (
+                  <View style={styles.upcomingBadge}>
+                    <Text style={styles.upcomingBadgeText}>UPCOMING</Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* Live Progress Bar */}
-            {isLive && (
+            {isLive && Boolean(countdown) && (
               <View style={styles.progressWrap}>
                 <View style={styles.progressLabels}>
                   <Text style={styles.progressSubText}>Round progress</Text>
@@ -209,37 +212,13 @@ export function ContestModal({ contest, timezone, onClose }) {
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </View>
-      </View>
-    </Modal>
+        </>
+      )}
+    </AppleBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    justifyContent: 'flex-end'
-  },
-  dismissOverlay: {
-    flex: 1
-  },
-  sheetContainer: {
-    backgroundColor: COLORS.secondarySystemBackground,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '85%',
-    paddingBottom: 28
-  },
-  grabHandle: {
-    width: 36,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 4
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -268,6 +247,9 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: 20
+  },
+  bodyContent: {
+    paddingBottom: 28
   },
   title: {
     fontSize: 22,
@@ -447,7 +429,7 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 16
+    marginBottom: 8
   },
   actionBtn: {
     flex: 1,

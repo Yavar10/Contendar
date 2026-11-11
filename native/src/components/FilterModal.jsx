@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Modal,
   View,
   Text,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 import { PlatformIcon } from './PlatformIcons';
+import { AppleBottomSheet } from './AppleBottomSheet';
 
 const COMMON_DIVISIONS = [
   'All',
@@ -43,189 +43,159 @@ export function FilterModal({
   const isAllDivisionsSelected =
     selectedDivisions.includes('All') || selectedDivisions.length === 0;
 
+  const footerAction = (
+    <TouchableOpacity style={styles.applyBtn} onPress={onClose} activeOpacity={0.7}>
+      <Text style={styles.applyBtnText}>
+        Show {resultCount} {resultCount === 1 ? 'Contest' : 'Contests'}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
-    <Modal
+    <AppleBottomSheet
       visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
+      onClose={onClose}
+      maxHeight="84%"
+      footer={footerAction}
     >
-      <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.dismissOverlay} onPress={onClose} activeOpacity={1} />
+      {/* Navigation Bar */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onResetAllFilters} style={styles.headerBtn} activeOpacity={0.6}>
+          <Text style={styles.resetBtnText}>Reset</Text>
+        </TouchableOpacity>
 
-        <View style={styles.sheetContainer}>
-          <View style={styles.grabHandle} />
+        <Text style={styles.headerTitle}>Filters</Text>
 
-          {/* Navigation Bar */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onResetAllFilters} style={styles.headerBtn} activeOpacity={0.6}>
-              <Text style={styles.resetBtnText}>Reset</Text>
-            </TouchableOpacity>
+        <TouchableOpacity onPress={onClose} style={styles.headerBtn} activeOpacity={0.6}>
+          <Text style={styles.doneBtnText}>Done</Text>
+        </TouchableOpacity>
+      </View>
 
-            <Text style={styles.headerTitle}>Filters</Text>
-
-            <TouchableOpacity onPress={onClose} style={styles.headerBtn} activeOpacity={0.6}>
-              <Text style={styles.doneBtnText}>Done</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-            {/* Status Section: iOS Segmented Control */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>STATUS</Text>
-              <View style={styles.segmentedControl}>
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'live', label: 'Live' },
-                  { id: 'upcoming', label: 'Upcoming' }
-                ].map((s) => {
-                  const isActive = statusFilter === s.id;
-                  return (
-                    <TouchableOpacity
-                      key={s.id}
-                      style={[styles.segment, isActive && styles.segmentActive]}
-                      onPress={() => onStatusFilterChange(s.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
-                        {s.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Platforms Section: Inset Grouped Checklist */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>PLATFORMS</Text>
-              <View style={styles.groupedTable}>
-                {/* All platforms row */}
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.bodyContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Status Section: iOS Segmented Control */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>STATUS</Text>
+          <View style={styles.segmentedControl}>
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'live', label: 'Live' },
+              { id: 'upcoming', label: 'Upcoming' }
+            ].map((s) => {
+              const isActive = statusFilter === s.id;
+              return (
                 <TouchableOpacity
-                  style={styles.tableRow}
-                  onPress={onSelectAllPlatforms}
-                  activeOpacity={0.6}
+                  key={s.id}
+                  style={[styles.segment, isActive && styles.segmentActive]}
+                  onPress={() => onStatusFilterChange(s.id)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.tableRowLabel}>All Platforms</Text>
-                  {isAllPlatformsSelected && (
-                    <Ionicons name="checkmark" size={18} color={COLORS.systemBlue} />
-                  )}
+                  <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
+                    {s.label}
+                  </Text>
                 </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
 
-                {platforms.map((p, idx) => {
-                  const isSelected = selectedPlatforms.includes(p.id);
-                  const isLast = idx === platforms.length - 1;
+        {/* Platforms Section: Inset Grouped Checklist */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>PLATFORMS</Text>
+          <View style={styles.groupedTable}>
+            {/* All platforms row */}
+            <TouchableOpacity
+              style={styles.tableRow}
+              onPress={onSelectAllPlatforms}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.tableRowLabel}>All Platforms</Text>
+              {isAllPlatformsSelected && (
+                <Ionicons name="checkmark" size={18} color={COLORS.systemBlue} />
+              )}
+            </TouchableOpacity>
 
-                  return (
-                    <React.Fragment key={p.id}>
-                      <View style={styles.separator} />
-                      <TouchableOpacity
-                        style={styles.tableRow}
-                        onPress={() => onTogglePlatform(p.id)}
-                        activeOpacity={0.6}
-                      >
-                        <View style={styles.platformRowLeft}>
-                          <PlatformIcon platform={p.id} size={16} />
-                          <Text style={styles.tableRowLabel}>{p.name}</Text>
-                        </View>
-                        {isSelected && (
-                          <Ionicons name="checkmark" size={18} color={COLORS.systemBlue} />
-                        )}
-                      </TouchableOpacity>
-                    </React.Fragment>
-                  );
-                })}
-              </View>
-            </View>
+            {platforms.map((p) => {
+              const isSelected = selectedPlatforms.includes(p.id);
 
-            {/* Divisions & Formats Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>DIVISIONS & ROUND TYPES</Text>
-              <View style={styles.chipsWrap}>
+              return (
+                <React.Fragment key={p.id}>
+                  <View style={styles.separator} />
+                  <TouchableOpacity
+                    style={styles.tableRow}
+                    onPress={() => onTogglePlatform(p.id)}
+                    activeOpacity={0.6}
+                  >
+                    <View style={styles.platformRowLeft}>
+                      <PlatformIcon platform={p.id} size={16} />
+                      <Text style={styles.tableRowLabel}>{p.name}</Text>
+                    </View>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={18} color={COLORS.systemBlue} />
+                    )}
+                  </TouchableOpacity>
+                </React.Fragment>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Divisions & Formats Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>DIVISIONS & ROUND TYPES</Text>
+          <View style={styles.chipsWrap}>
+            <TouchableOpacity
+              style={[
+                styles.chip,
+                isAllDivisionsSelected && styles.chipActive
+              ]}
+              onPress={onSelectAllDivisions}
+              activeOpacity={0.6}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  isAllDivisionsSelected && styles.chipTextActive
+                ]}
+              >
+                All Divisions
+              </Text>
+            </TouchableOpacity>
+
+            {COMMON_DIVISIONS.filter((d) => d !== 'All').map((div) => {
+              const isSelected = selectedDivisions.includes(div);
+              return (
                 <TouchableOpacity
+                  key={div}
                   style={[
                     styles.chip,
-                    isAllDivisionsSelected && styles.chipActive
+                    isSelected && styles.chipActive
                   ]}
-                  onPress={onSelectAllDivisions}
+                  onPress={() => onToggleDivision(div)}
                   activeOpacity={0.6}
                 >
                   <Text
                     style={[
                       styles.chipText,
-                      isAllDivisionsSelected && styles.chipTextActive
+                      isSelected && styles.chipTextActive
                     ]}
                   >
-                    All Divisions
+                    {div}
                   </Text>
                 </TouchableOpacity>
-
-                {COMMON_DIVISIONS.filter((d) => d !== 'All').map((div) => {
-                  const isSelected = selectedDivisions.includes(div);
-                  return (
-                    <TouchableOpacity
-                      key={div}
-                      style={[
-                        styles.chip,
-                        isSelected && styles.chipActive
-                      ]}
-                      onPress={() => onToggleDivision(div)}
-                      activeOpacity={0.6}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          isSelected && styles.chipTextActive
-                        ]}
-                      >
-                        {div}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          </ScrollView>
-
-          {/* Bottom Action */}
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.applyBtn} onPress={onClose} activeOpacity={0.7}>
-              <Text style={styles.applyBtnText}>
-                Show {resultCount} {resultCount === 1 ? 'Contest' : 'Contests'}
-              </Text>
-            </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
-      </View>
-    </Modal>
+      </ScrollView>
+    </AppleBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    justifyContent: 'flex-end'
-  },
-  dismissOverlay: {
-    flex: 1
-  },
-  sheetContainer: {
-    backgroundColor: COLORS.secondarySystemBackground,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '82%',
-    paddingBottom: 24
-  },
-  grabHandle: {
-    width: 36,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 4
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -254,6 +224,9 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: 20
+  },
+  bodyContent: {
+    paddingBottom: 20
   },
   section: {
     marginBottom: 20
@@ -339,16 +312,13 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: '600'
   },
-  footer: {
-    paddingHorizontal: 20,
-    paddingTop: 8
-  },
   applyBtn: {
     backgroundColor: COLORS.systemBlue,
     height: 48,
     borderRadius: 14,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    marginBottom: 4
   },
   applyBtnText: {
     color: '#FFFFFF',

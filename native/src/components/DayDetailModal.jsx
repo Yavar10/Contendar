@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Modal,
   View,
   Text,
   StyleSheet,
@@ -11,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 import { formatTimeOnly, formatDuration } from '../utils/timeUtils';
 import { PlatformIcon } from './PlatformIcons';
+import { AppleBottomSheet } from './AppleBottomSheet';
 
 export function DayDetailModal({
   dayData,
@@ -18,9 +18,9 @@ export function DayDetailModal({
   onClose,
   onSelectContest
 }) {
-  if (!dayData) return null;
+  const date = dayData?.date;
+  const contests = dayData?.contests || [];
 
-  const { date, contests } = dayData;
   const formattedDate = date ? new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'short',
@@ -28,18 +28,13 @@ export function DayDetailModal({
   }).format(date) : '';
 
   return (
-    <Modal
+    <AppleBottomSheet
       visible={Boolean(dayData)}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
+      onClose={onClose}
+      maxHeight="82%"
     >
-      <View style={styles.backdrop}>
-        <TouchableOpacity style={styles.dismissOverlay} onPress={onClose} activeOpacity={1} />
-
-        <View style={styles.sheetContainer}>
-          <View style={styles.grabHandle} />
-
+      {Boolean(dayData) && (
+        <>
           {/* Navigation Bar */}
           <View style={styles.header}>
             <View>
@@ -55,7 +50,11 @@ export function DayDetailModal({
           </View>
 
           {/* Inset Grouped List of contests */}
-          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.body}
+            contentContainerStyle={styles.bodyContent}
+            showsVerticalScrollIndicator={false}
+          >
             <View style={styles.groupedTable}>
               {contests.map((c, idx) => {
                 const isLive = c.status === 'LIVE';
@@ -111,37 +110,13 @@ export function DayDetailModal({
               })}
             </View>
           </ScrollView>
-        </View>
-      </View>
-    </Modal>
+        </>
+      )}
+    </AppleBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    justifyContent: 'flex-end'
-  },
-  dismissOverlay: {
-    flex: 1
-  },
-  sheetContainer: {
-    backgroundColor: COLORS.secondarySystemBackground,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '78%',
-    paddingBottom: 28
-  },
-  grabHandle: {
-    width: 36,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 4
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -171,6 +146,9 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: 20,
     paddingTop: 8
+  },
+  bodyContent: {
+    paddingBottom: 24
   },
   groupedTable: {
     backgroundColor: COLORS.tertiarySystemBackground,

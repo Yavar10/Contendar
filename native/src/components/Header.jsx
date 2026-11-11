@@ -61,7 +61,7 @@ export function Header({
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           >
             <Ionicons
-              name="slider-horizontal"
+              name="options-outline"
               size={18}
               color={activeFilterCount > 0 ? COLORS.systemBlue : COLORS.label}
             />
