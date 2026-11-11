@@ -28,6 +28,9 @@ import { FilterModal } from './src/components/FilterModal';
 import { SettingsModal } from './src/components/SettingsModal';
 
 import { getPlatforms, getContests, getApiBaseUrl } from './src/services/api';
+import { syncContestsToWidget } from './src/services/widgetBridge';
+import { isSameDay } from './src/utils/timeUtils';
+import * as Linking from 'expo-linking';
 import { COLORS, TYPOGRAPHY } from './src/constants/theme';
 
 export default function App() {
@@ -59,6 +62,43 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // Widget deep link handler (contendar://contest/:id or contendar://date/:isoDate)
+  useEffect(() => {
+    const handleUrl = (event) => {
+      if (!event?.url) return;
+      try {
+        const parsed = Linking.parse(event.url);
+        if (parsed.hostname === 'contest' || parsed.path?.includes('contest')) {
+          const contestId = parsed.queryParams?.id || parsed.path?.split('/').pop();
+          if (contestId) {
+            const target = allContests.find((c) => String(c.id) === String(contestId));
+            if (target) {
+              setSelectedContest(target);
+            }
+          }
+        } else if (parsed.hostname === 'date' || parsed.path?.includes('date')) {
+          const dateStr = parsed.queryParams?.date || parsed.path?.split('/').pop();
+          if (dateStr) {
+            const targetDate = new Date(dateStr);
+            if (!isNaN(targetDate.getTime())) {
+              const dayMatches = allContests.filter((c) => isSameDay(c.startTimeMs, targetDate));
+              setSelectedDay({ date: targetDate, contests: dayMatches });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error handling deep link:', e);
+      }
+    };
+
+    const subscription = Linking.addEventListener('url', handleUrl);
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl({ url });
+    });
+
+    return () => subscription.remove();
+  }, [allContests]);
+
   // Initial load
   const loadData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setIsRefreshing(true);
@@ -79,6 +119,9 @@ export default function App() {
         setApiError(null);
         setPlatforms(platformResult.data || []);
         setAllContests(contestResult.data || []);
+
+        // Sync fresh contest data to iOS & Android native widgets
+        syncContestsToWidget(contestResult.data || [], timezone);
 
         // Default select all platforms on first load
         if (selectedPlatforms.length === 0 && (platformResult.data || []).length > 0) {
@@ -340,7 +383,7 @@ export default function App() {
               </View>
               <Text style={styles.errorTitle}>Cannot Connect to Server</Text>
               <Text style={styles.errorDesc}>
-                {`Could not connect to backend at\n${getApiBaseUrl()}\nPlease start the backend server to load live contests.`}
+                {`Could not connect to backend at\n${getApiBaseUrl()}\nPlease check your internet connection or start the local backend.`}
               </Text>
               <View style={styles.terminalBox}>
                 <Text style={styles.terminalText}>cd backend && npm run dev</Text>
@@ -425,7 +468,10 @@ export default function App() {
           visible={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
           currentTimezone={timezone}
-          onSelectTimezone={setTimezone}
+          onSelectTimezone={(tz) => {
+            setTimezone(tz);
+            syncContestsToWidget(allContests, tz);
+          }}
           onRefresh={() => loadData(true)}
           isRefreshing={isRefreshing}
           hasApiError={Boolean(apiError)}

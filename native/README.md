@@ -23,9 +23,9 @@ Tracks contests across **Codeforces**, **LeetCode**, **CodeChef**, and **AtCoder
   - Direct **Open Arena** in mobile browser
   - Native **Share** dialog (WhatsApp, Telegram, Slack, etc.)
   - Copy contest link to clipboard
-- **Offline & Fallback Resilience**:
-  - Built-in verified offline demo data if the backend is not running or unreachable.
-  - Server URL configuration modal with quick presets (`10.0.2.2:5000` for Android emulator, `localhost:5000` for iOS simulator, or custom LAN IP) and connection testing.
+- **Cloud-Connected & Offline Resilient**:
+  - Connected by default to the production Render cloud backend: `https://contendar.onrender.com`
+  - Server URL configuration modal with quick presets (Render Cloud, `localhost:5000`, `10.0.2.2:5000`) and real-time connectivity testing.
 - **Pull-to-Refresh**: Seamless pull-to-refresh to fetch verified rounds.
 
 ---
@@ -56,18 +56,17 @@ npm start
 
 ---
 
-## 🌐 Automatic Backend Detection in Expo
+## 🌐 Backend Architecture & Render Deployment
 
-The mobile app automatically connects to the Express backend running on your development machine:
+The mobile app connects out-of-the-box to the live Render backend:
 
-1. **Auto-Discovery via Expo**:
-   - The app uses `expo-constants` to detect your computer's LAN IP address from the Expo packager host (e.g. `192.168.1.X:5000`).
-   - When running on a physical phone via **Expo Go**, it connects automatically with **zero configuration**!
-   - On Android emulator, it falls back to `10.0.2.2:5000`. On iOS simulator/web, it connects to `localhost:5000`.
-2. **Offline Resilience**:
-   - If the backend is unreachable or offline, the app seamlessly provides verified contest demo data without blocking the screen.
-3. **Manual Overrides**:
-   - Tap the **Settings icon** (top-right of header) to test connection, switch timezones, or manually configure server host URL.
+1. **Production Cloud Backend**:
+   - Live endpoint: **`https://contendar.onrender.com`**
+   - Automatically synchronizes Codeforces, LeetCode, CodeChef, and AtCoder rounds.
+2. **Local Development (Optional)**:
+   - If developing the backend locally, tap the **Settings icon** in the top navigation bar and select the `localhost:5000` or `10.0.2.2:5000` preset.
+3. **Connectivity Testing**:
+   - Tap **"Test Server Connection"** in the Settings sheet at any time to verify health and latency.
 
 ---
 

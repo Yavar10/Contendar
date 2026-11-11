@@ -44,7 +44,8 @@ cd backend
 npm install
 npm run dev
 ```
-> 🌐 Backend runs at: **`http://localhost:5000`**
+> 🌐 Production Cloud Backend: **`https://contendar.onrender.com`**  
+> 🌐 Local Backend runs at: **`http://localhost:5000`**
 
 ### Terminal 2: Frontend Web App (React 19 + Vite)
 ```bash

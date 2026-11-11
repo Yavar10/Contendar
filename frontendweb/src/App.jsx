@@ -293,9 +293,9 @@ export default function App() {
                 Backend Server Unreachable
               </h2>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '8px', lineHeight: 1.5 }}>
-                Could not connect to the contest radar backend server at <code style={{ color: '#ef4444' }}>http://localhost:5000/api</code>.
+                Could not connect to the contest radar backend server at <code style={{ color: '#ef4444' }}>https://contendar.onrender.com/api</code>.
                 <br />
-                Please ensure the Express backend is running.
+                Please check your network connection or verify that the backend is active.
               </p>
             </div>
             <div

@@ -2,7 +2,9 @@
 
 A high-performance competitive programming calendar & telemetry radar tracking **Codeforces**, **LeetCode**, **CodeChef**, and **AtCoder**, designed in an iconic **Swiss Typography Maximalist** aesthetic.
 
-Built with an **Express.js** extensible platform adapter backend and a high-energy **React 19 + Vite** web interface.
+> 🌐 **Live Cloud Backend API**: **`https://contendar.onrender.com`**  
+> 📱 **Native Mobile App**: React Native Expo with iOS & Android Widgets (`native/`)  
+> 💻 **Web Client**: React 19 + Vite (`frontendweb/`)
 
 ---
 

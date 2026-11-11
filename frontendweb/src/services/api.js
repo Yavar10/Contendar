@@ -2,7 +2,7 @@
  * API service for fetching platforms and contests from the backend.
  */
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://contendar.onrender.com/api';
 
 /**
  * Fetch platform metadata from the backend.

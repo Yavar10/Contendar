@@ -1,0 +1,11 @@
+{
+  "name": "widget-bridge",
+  "platforms": ["ios", "android"],
+  "ios": {
+    "modules": ["WidgetBridgeModule"]
+  },
+  "android": {
+    "modules": ["com.contendar.widgetbridge.WidgetBridgeModule"]
+  }
+}
+

@@ -3,33 +3,12 @@ import Constants from 'expo-constants';
 
 /**
  * API service for fetching platforms and contests from the backend.
- * Auto-detects Expo packager host for mobile devices.
+ * Defaults to the live production Render cloud server.
  */
 
-function getAutoDetectedApiHost() {
-  try {
-    // 1. Expo development host (e.g. 192.168.1.x:8081)
-    const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.debuggerHost || '';
-    if (hostUri) {
-      const ip = hostUri.split(':')[0];
-      if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
-        return `http://${ip}:5000`;
-      }
-    }
-  } catch (e) {
-    console.warn('Could not auto-detect Expo host IP:', e);
-  }
+export const DEFAULT_API_BASE = 'https://contendar.onrender.com';
 
-  // 2. Android emulator default
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:5000';
-  }
-
-  // 3. iOS simulator / web / localhost
-  return 'http://localhost:5000';
-}
-
-let configuredApiBase = getAutoDetectedApiHost();
+let configuredApiBase = DEFAULT_API_BASE;
 
 export function getApiBaseUrl() {
   return configuredApiBase;

@@ -144,7 +144,7 @@ export function SettingsModal({
                 }}
                 autoCapitalize="none"
                 autoCorrect={false}
-                placeholder="http://192.168.1.X:5000"
+                placeholder="https://contendar.onrender.com"
                 placeholderTextColor={COLORS.tertiaryLabel}
               />
               <TouchableOpacity style={styles.applyInputBtn} onPress={handleSaveUrl} activeOpacity={0.7}>
@@ -159,12 +159,12 @@ export function SettingsModal({
               <TouchableOpacity
                 style={styles.presetChip}
                 onPress={() => {
-                  setUrlInput('http://10.0.2.2:5000');
+                  setUrlInput('https://contendar.onrender.com');
                   setTestResult(null);
                 }}
                 activeOpacity={0.6}
               >
-                <Text style={styles.presetText}>10.0.2.2 (Android)</Text>
+                <Text style={styles.presetText}>Render Cloud</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.presetChip}
@@ -174,7 +174,17 @@ export function SettingsModal({
                 }}
                 activeOpacity={0.6}
               >
-                <Text style={styles.presetText}>localhost:5000</Text>
+                <Text style={styles.presetText}>localhost</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.presetChip}
+                onPress={() => {
+                  setUrlInput('http://10.0.2.2:5000');
+                  setTestResult(null);
+                }}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.presetText}>10.0.2.2</Text>
               </TouchableOpacity>
             </View>
 
