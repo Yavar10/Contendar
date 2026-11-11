@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
 export function SearchBar({
@@ -22,26 +22,37 @@ export function SearchBar({
   return (
     <View style={styles.container}>
       <View style={styles.searchBox}>
-        <Feather name="search" size={15} color={COLORS.textMuted} />
+        <Ionicons name="search" size={16} color={COLORS.secondaryLabel} style={styles.searchIcon} />
         <TextInput
           ref={inputRef}
           style={styles.input}
           value={searchQuery}
           onChangeText={onSearchChange}
-          placeholder="Search by title, platform, division..."
-          placeholderTextColor={COLORS.textMuted}
+          placeholder="Search contests, platforms, div..."
+          placeholderTextColor={COLORS.tertiaryLabel}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
+          clearButtonMode="while-editing"
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => onSearchChange('')} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={16} color={COLORS.textMuted} />
+          <TouchableOpacity
+            onPress={() => onSearchChange('')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.clearBtn}
+          >
+            <Ionicons name="close-circle" size={16} color={COLORS.secondaryLabel} />
           </TouchableOpacity>
         )}
       </View>
-      <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-        <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+
+      <TouchableOpacity
+        style={styles.cancelBtn}
+        onPress={onClose}
+        activeOpacity={0.6}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Text style={styles.cancelText}>Cancel</Text>
       </TouchableOpacity>
     </View>
   );
@@ -51,41 +62,39 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 6,
-    backgroundColor: COLORS.bgPrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderSubtle
+    backgroundColor: COLORS.systemBackground,
+    gap: 10
   },
   searchBox: {
     flex: 1,
-    height: 38,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
+    height: 36,
+    backgroundColor: 'rgba(118, 118, 128, 0.24)',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    gap: 8
+    paddingHorizontal: 10
+  },
+  searchIcon: {
+    marginRight: 6
   },
   input: {
     flex: 1,
     height: '100%',
-    color: COLORS.textPrimary,
-    fontSize: 13
+    color: COLORS.label,
+    fontSize: 16,
+    paddingVertical: 0
   },
   clearBtn: {
     padding: 2
   },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.bgCard
+  cancelBtn: {
+    paddingVertical: 4
+  },
+  cancelText: {
+    color: COLORS.systemBlue,
+    fontSize: 16,
+    fontWeight: '400'
   }
 });
-

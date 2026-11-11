@@ -23,7 +23,7 @@ export function PlatformChips({
         <TouchableOpacity
           style={[styles.chip, isAllSelected && styles.chipAllActive]}
           onPress={onSelectAllPlatforms}
-          activeOpacity={0.7}
+          activeOpacity={0.6}
         >
           <Text style={[styles.chipText, isAllSelected && styles.chipTextAllActive]}>
             All
@@ -34,32 +34,26 @@ export function PlatformChips({
         {platforms.map((platform) => {
           const isSelected = selectedPlatforms.includes(platform.id);
           const count = contestCountsByPlatform[platform.id] || 0;
-          const brandColor = platform.color || COLORS.appleBlue;
+          const brandColor = platform.color || COLORS.systemBlue;
 
           return (
             <TouchableOpacity
               key={platform.id}
               style={[
                 styles.chip,
-                isSelected && {
-                  borderColor: brandColor,
-                  backgroundColor: platform.badgeBg || 'rgba(10, 132, 255, 0.15)'
-                }
+                isSelected && styles.chipSelected
               ]}
               onPress={() => onTogglePlatform(platform.id)}
-              activeOpacity={0.7}
+              activeOpacity={0.6}
             >
-              <PlatformIcon platform={platform.id} size={13} />
-              <Text
-                style={[
-                  styles.chipText,
-                  isSelected && { color: brandColor, fontWeight: '700' }
-                ]}
-              >
+              <PlatformIcon platform={platform.id} size={14} />
+              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
                 {platform.name}
               </Text>
-              <View style={styles.countBadge}>
-                <Text style={styles.countText}>{count}</Text>
+              <View style={[styles.countBadge, isSelected && styles.countBadgeSelected]}>
+                <Text style={[styles.countText, isSelected && styles.countTextSelected]}>
+                  {count}
+                </Text>
               </View>
             </TouchableOpacity>
           );
@@ -82,35 +76,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.09)',
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    borderRadius: 16
+    backgroundColor: 'rgba(118, 118, 128, 0.18)',
+    paddingHorizontal: 12,
+    height: 34,
+    borderRadius: 17
   },
   chipAllActive: {
-    borderColor: COLORS.appleBlue,
-    backgroundColor: 'rgba(10, 132, 255, 0.18)'
+    backgroundColor: '#FFFFFF'
+  },
+  chipSelected: {
+    backgroundColor: '#FFFFFF'
   },
   chipText: {
-    color: COLORS.textSecondary,
+    color: COLORS.secondaryLabel,
+    fontSize: 13,
+    fontWeight: '500'
+  },
+  chipTextAllActive: {
+    color: '#000000',
+    fontWeight: '600'
+  },
+  chipTextSelected: {
+    color: '#000000',
+    fontWeight: '600'
+  },
+  countBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 9
+  },
+  countBadgeSelected: {
+    backgroundColor: 'rgba(0, 0, 0, 0.08)'
+  },
+  countText: {
+    color: COLORS.secondaryLabel,
     fontSize: 11,
     fontWeight: '600'
   },
-  chipTextAllActive: {
-    color: '#fff',
-    fontWeight: '700'
-  },
-  countBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 8,
-    paddingHorizontal: 5,
-    paddingVertical: 1
-  },
-  countText: {
-    color: COLORS.textMuted,
-    fontSize: 9,
-    fontWeight: '700'
+  countTextSelected: {
+    color: '#000000'
   }
 });

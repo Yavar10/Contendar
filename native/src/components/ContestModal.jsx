@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView
 } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 import { formatDateTime, formatDuration, getCountdown } from '../utils/timeUtils';
 import {
@@ -58,45 +58,26 @@ export function ContestModal({ contest, timezone, onClose }) {
         <TouchableOpacity style={styles.dismissOverlay} onPress={onClose} activeOpacity={1} />
 
         <View style={styles.sheetContainer}>
-          {/* Header */}
+          <View style={styles.grabHandle} />
+
+          {/* Apple Navigation Bar */}
           <View style={styles.header}>
-            <View style={styles.platformRow}>
-              <PlatformIcon platform={contest.platform} size={20} />
-              <View>
-                <Text style={styles.platformName}>{contest.platformName}</Text>
-                <Text style={styles.contestId}>#{contest.id}</Text>
-              </View>
+            <View style={styles.headerPlatform}>
+              <PlatformIcon platform={contest.platform} size={18} />
+              <Text style={styles.headerPlatformName}>{contest.platformName}</Text>
             </View>
 
-            <View style={styles.headerRight}>
-              {isLive ? (
-                <View style={styles.liveBadge}>
-                  <View style={styles.livePulseDot} />
-                  <Text style={styles.liveBadgeText}>LIVE NOW</Text>
-                </View>
-              ) : (
-                <View style={styles.upcomingBadge}>
-                  <Text style={styles.upcomingBadgeText}>UPCOMING</Text>
-                </View>
-              )}
-
-              <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-                <Ionicons name="close" size={20} color={COLORS.textPrimary} />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.6}>
+              <Text style={styles.doneBtnText}>Done</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-            {/* Title */}
+            {/* Contest Title */}
             <Text style={styles.title}>{contest.title}</Text>
 
             {/* Countdown Banner */}
             <View style={[styles.timerBanner, isLive && styles.timerBannerLive]}>
-              <Feather
-                name="clock"
-                size={16}
-                color={isLive ? COLORS.accentRed : COLORS.accentBlue}
-              />
               <View style={styles.timerContent}>
                 <Text style={[styles.timerLabel, isLive && styles.timerLabelLive]}>
                   {isLive ? 'ENDS IN' : 'STARTS IN'}
@@ -105,6 +86,17 @@ export function ContestModal({ contest, timezone, onClose }) {
                   {countdown.label.replace(/^(Starts in |Ends in )/i, '')}
                 </Text>
               </View>
+
+              {isLive ? (
+                <View style={styles.liveBadge}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveBadgeText}>LIVE</Text>
+                </View>
+              ) : (
+                <View style={styles.upcomingBadge}>
+                  <Text style={styles.upcomingBadgeText}>UPCOMING</Text>
+                </View>
+              )}
             </View>
 
             {/* Live Progress Bar */}
@@ -125,7 +117,34 @@ export function ContestModal({ contest, timezone, onClose }) {
               </View>
             )}
 
-            {/* Division Badges */}
+            {/* Inset Grouped Schedule Details */}
+            <View style={styles.metaSection}>
+              <Text style={styles.sectionHeader}>SCHEDULE DETAILS</Text>
+              <View style={styles.groupedTable}>
+                <View style={styles.tableRow}>
+                  <Text style={styles.rowLabel}>Starts</Text>
+                  <Text style={styles.rowValue}>
+                    {formatDateTime(contest.startTimeMs, timezone)}
+                  </Text>
+                </View>
+                <View style={styles.separator} />
+                <View style={styles.tableRow}>
+                  <Text style={styles.rowLabel}>Ends</Text>
+                  <Text style={styles.rowValue}>
+                    {formatDateTime(contest.endTimeMs, timezone)}
+                  </Text>
+                </View>
+                <View style={styles.separator} />
+                <View style={styles.tableRow}>
+                  <Text style={styles.rowLabel}>Duration</Text>
+                  <Text style={styles.rowValue}>
+                    {formatDuration(contest.durationSeconds)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Inset Grouped Divisions */}
             <View style={styles.metaSection}>
               <Text style={styles.sectionHeader}>ELIGIBLE DIVISIONS</Text>
               <View style={styles.divisionsRow}>
@@ -134,7 +153,7 @@ export function ContestModal({ contest, timezone, onClose }) {
                     <Text style={styles.divisionPillText}>{div}</Text>
                   </View>
                 ))}
-                {contest.type && (
+                {Boolean(contest.type) && (
                   <View style={[styles.divisionPill, styles.typePill]}>
                     <Text style={[styles.divisionPillText, styles.typePillText]}>
                       {contest.type}
@@ -144,60 +163,25 @@ export function ContestModal({ contest, timezone, onClose }) {
               </View>
             </View>
 
-            {/* Schedule Info Card */}
-            <View style={styles.metaSection}>
-              <Text style={styles.sectionHeader}>SCHEDULE DETAILS</Text>
-              <View style={styles.infoCard}>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Starts</Text>
-                  <Text style={styles.infoValue}>
-                    {formatDateTime(contest.startTimeMs, timezone)}
-                  </Text>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Ends</Text>
-                  <Text style={styles.infoValue}>
-                    {formatDateTime(contest.endTimeMs, timezone)}
-                  </Text>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Duration</Text>
-                  <Text style={styles.infoValue}>
-                    {formatDuration(contest.durationSeconds)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Description */}
-            {contest.description && (
-              <View style={styles.metaSection}>
-                <Text style={styles.sectionHeader}>ROUND OVERVIEW</Text>
-                <Text style={styles.descriptionText}>{contest.description}</Text>
-              </View>
-            )}
-
             {/* Primary Action: Open Arena */}
             <TouchableOpacity
-              style={styles.primaryBtn}
+              style={[styles.primaryBtn, isLive && styles.primaryBtnLive]}
               onPress={() => openContestArena(contest.url)}
               activeOpacity={0.7}
             >
-              <Feather name="external-link" size={16} color="#fff" />
               <Text style={styles.primaryBtnText}>Open Contest Arena</Text>
+              <Feather name="arrow-up-right" size={16} color="#FFFFFF" />
             </TouchableOpacity>
 
-            {/* Action Row */}
+            {/* Secondary Action Row */}
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={styles.actionBtn}
                 onPress={() => openGoogleCalendar(contest)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="calendar-sharp" size={16} color={COLORS.accentBlue} />
-                <Text style={styles.actionBtnText}>Add to GCal</Text>
+                <Ionicons name="calendar-outline" size={16} color={COLORS.systemBlue} />
+                <Text style={styles.actionBtnText}>Add to Calendar</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -208,9 +192,11 @@ export function ContestModal({ contest, timezone, onClose }) {
                 <Ionicons
                   name={copied ? 'checkmark' : 'copy-outline'}
                   size={16}
-                  color={copied ? COLORS.accentGreen : COLORS.textPrimary}
+                  color={copied ? COLORS.systemGreen : COLORS.label}
                 />
-                <Text style={styles.actionBtnText}>{copied ? 'Copied!' : 'Copy Link'}</Text>
+                <Text style={[styles.actionBtnText, copied && { color: COLORS.systemGreen }]}>
+                  {copied ? 'Copied' : 'Copy Link'}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -218,7 +204,7 @@ export function ContestModal({ contest, timezone, onClose }) {
                 onPress={() => shareContest(contest)}
                 activeOpacity={0.7}
               >
-                <Feather name="share-2" size={16} color={COLORS.textPrimary} />
+                <Feather name="share-2" size={15} color={COLORS.label} />
                 <Text style={styles.actionBtnText}>Share</Text>
               </TouchableOpacity>
             </View>
@@ -232,170 +218,190 @@ export function ContestModal({ contest, timezone, onClose }) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'flex-end'
   },
   dismissOverlay: {
     flex: 1
   },
   sheetContainer: {
-    backgroundColor: COLORS.bgCard,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    backgroundColor: COLORS.secondarySystemBackground,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '85%',
-    paddingBottom: 24
+    paddingBottom: 28
+  },
+  grabHandle: {
+    width: 36,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 4
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderSubtle
+    paddingHorizontal: 20,
+    paddingVertical: 12
   },
-  platformRow: {
+  headerPlatform: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8
   },
-  platformName: {
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: '700'
+  headerPlatformName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.label
   },
-  contestId: {
-    color: COLORS.textMuted,
-    fontSize: 10
+  doneBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8
-  },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: COLORS.badgeLiveBg,
-    borderColor: COLORS.badgeLiveBorder,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12
-  },
-  livePulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.accentRed
-  },
-  liveBadgeText: {
-    color: COLORS.accentRed,
-    fontSize: 10,
-    fontWeight: '800'
-  },
-  upcomingBadge: {
-    backgroundColor: COLORS.badgeUpcomingBg,
-    borderColor: COLORS.badgeUpcomingBorder,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12
-  },
-  upcomingBadgeText: {
-    color: COLORS.accentBlue,
-    fontSize: 10,
-    fontWeight: '700'
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center'
+  doneBtnText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: COLORS.systemBlue
   },
   body: {
-    padding: 16
+    paddingHorizontal: 20
   },
   title: {
-    color: COLORS.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
-    lineHeight: 24,
-    marginBottom: 14
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: 0.35,
+    lineHeight: 28,
+    color: COLORS.label,
+    marginBottom: 16
   },
   timerBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.25)',
-    borderRadius: 12,
-    padding: 12,
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(10, 132, 255, 0.12)',
+    padding: 14,
+    borderRadius: 14,
     marginBottom: 12
   },
   timerBannerLive: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderColor: 'rgba(239, 68, 68, 0.3)'
+    backgroundColor: 'rgba(255, 69, 58, 0.14)'
   },
   timerContent: {
     flex: 1
   },
   timerLabel: {
-    color: COLORS.accentBlue,
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 1
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    color: COLORS.systemBlue,
+    marginBottom: 2
   },
   timerLabelLive: {
-    color: COLORS.accentRed
+    color: COLORS.systemRed
   },
   timerValue: {
-    color: COLORS.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
-    marginTop: 2
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.label
   },
   timerValueLive: {
-    color: COLORS.accentRed
+    color: COLORS.label
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 69, 58, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.systemRed
+  },
+  liveBadgeText: {
+    color: COLORS.systemRed,
+    fontSize: 10,
+    fontWeight: '700'
+  },
+  upcomingBadge: {
+    backgroundColor: 'rgba(10, 132, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8
+  },
+  upcomingBadgeText: {
+    color: COLORS.systemBlue,
+    fontSize: 10,
+    fontWeight: '700'
   },
   progressWrap: {
-    marginBottom: 14
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 16
   },
   progressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4
+    marginBottom: 6
   },
   progressSubText: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    fontWeight: '600'
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.secondaryLabel
   },
   progressTrack: {
-    height: 6,
+    height: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 3,
+    borderRadius: 2,
     overflow: 'hidden'
   },
   progressBar: {
     height: '100%',
-    backgroundColor: COLORS.accentRed,
-    borderRadius: 3
+    backgroundColor: COLORS.systemRed,
+    borderRadius: 2
   },
   metaSection: {
-    marginBottom: 14
+    marginBottom: 16
   },
   sectionHeader: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    marginBottom: 6
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    color: COLORS.secondaryLabel,
+    marginBottom: 6,
+    paddingLeft: 2
+  },
+  groupedTable: {
+    backgroundColor: COLORS.tertiarySystemBackground,
+    borderRadius: 12,
+    overflow: 'hidden'
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(84, 84, 88, 0.36)'
+  },
+  rowLabel: {
+    fontSize: 15,
+    color: COLORS.label
+  },
+  rowValue: {
+    fontSize: 15,
+    color: COLORS.secondaryLabel
   },
   divisionsRow: {
     flexDirection: 'row',
@@ -403,69 +409,40 @@ const styles = StyleSheet.create({
     gap: 6
   },
   divisionPill: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6
+    backgroundColor: COLORS.tertiarySystemBackground,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8
   },
   divisionPillText: {
-    color: COLORS.textPrimary,
-    fontSize: 11,
-    fontWeight: '600'
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.label
   },
   typePill: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)'
+    backgroundColor: 'rgba(10, 132, 255, 0.15)'
   },
   typePillText: {
-    color: '#a5b4fc'
-  },
-  infoCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    padding: 12
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  infoLabel: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    fontWeight: '600'
-  },
-  infoValue: {
-    color: COLORS.textPrimary,
-    fontSize: 12,
-    fontWeight: '700'
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.borderSubtle,
-    marginVertical: 8
-  },
-  descriptionText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    lineHeight: 18
+    color: COLORS.systemBlue
   },
   primaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: COLORS.accentBlue,
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginTop: 6,
-    marginBottom: 10
+    gap: 6,
+    backgroundColor: COLORS.systemBlue,
+    height: 48,
+    borderRadius: 14,
+    marginTop: 8,
+    marginBottom: 12
+  },
+  primaryBtnLive: {
+    backgroundColor: COLORS.systemRed
   },
   primaryBtnText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '800'
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600'
   },
   actionRow: {
     flexDirection: 'row',
@@ -477,17 +454,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    borderRadius: 10,
-    paddingVertical: 10
+    gap: 5,
+    backgroundColor: COLORS.tertiarySystemBackground,
+    height: 42,
+    borderRadius: 12
   },
   actionBtnText: {
-    color: COLORS.textPrimary,
-    fontSize: 11,
-    fontWeight: '700'
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.label
   }
 });
-

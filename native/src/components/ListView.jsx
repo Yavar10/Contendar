@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ContestCard } from './ContestCard';
 import { groupContestsByTimeline } from '../utils/timeUtils';
-import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
 export function ListView({
@@ -18,14 +18,13 @@ export function ListView({
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconBox}>
-          <MaterialCommunityIcons name="calendar-blank-outline" size={32} color={COLORS.textMuted} />
+          <Ionicons name="calendar-clear-outline" size={36} color={COLORS.tertiaryLabel} />
         </View>
         <Text style={styles.emptyTitle}>No Contests Found</Text>
         <Text style={styles.emptyDesc}>
           Try adjusting your search query, clearing division chips, or toggling platforms.
         </Text>
         <TouchableOpacity style={styles.resetBtn} onPress={onResetFilters} activeOpacity={0.7}>
-          <Feather name="refresh-cw" size={13} color="#fff" />
           <Text style={styles.resetBtnText}>Reset All Filters</Text>
         </TouchableOpacity>
       </View>
@@ -44,11 +43,9 @@ export function ListView({
               {title}
             </Text>
           </View>
-          <View style={[styles.sectionBadge, isLive && styles.sectionBadgeLive]}>
-            <Text style={[styles.sectionBadgeText, isLive && styles.sectionBadgeTextLive]}>
-              {items.length} {items.length === 1 ? 'round' : 'rounds'}
-            </Text>
-          </View>
+          <Text style={styles.sectionCountText}>
+            {items.length} {items.length === 1 ? 'Round' : 'Rounds'}
+          </Text>
         </View>
 
         {items.map((contest) => (
@@ -82,14 +79,14 @@ const styles = StyleSheet.create({
     paddingBottom: 24
   },
   section: {
-    marginBottom: 14
+    marginBottom: 16
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-    paddingBottom: 4
+    paddingHorizontal: 4,
+    marginBottom: 8
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -100,79 +97,61 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: COLORS.accentRed
+    backgroundColor: COLORS.systemRed
   },
   sectionTitle: {
-    color: COLORS.textSecondary,
+    color: COLORS.secondaryLabel,
     fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
+    fontWeight: '600',
+    letterSpacing: 0.2,
     textTransform: 'uppercase'
   },
   sectionTitleLive: {
-    color: COLORS.accentRed
+    color: COLORS.systemRed
   },
-  sectionBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 8
-  },
-  sectionBadgeLive: {
-    backgroundColor: COLORS.badgeLiveBg
-  },
-  sectionBadgeText: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    fontWeight: '700'
-  },
-  sectionBadgeTextLive: {
-    color: COLORS.accentRed
+  sectionCountText: {
+    color: COLORS.tertiaryLabel,
+    fontSize: 12,
+    fontWeight: '500'
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    borderRadius: 16,
-    marginTop: 16
+    padding: 40,
+    marginTop: 20
   },
   emptyIconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(118, 118, 128, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12
+    marginBottom: 16
   },
   emptyTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '700',
-    marginBottom: 4
+    color: COLORS.label,
+    marginBottom: 6
   },
   emptyDesc: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+    fontSize: 14,
+    color: COLORS.secondaryLabel,
     textAlign: 'center',
-    lineHeight: 17,
-    marginBottom: 14
+    lineHeight: 20,
+    marginBottom: 20,
+    maxWidth: 280
   },
   resetBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: COLORS.accentBlue,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8
+    backgroundColor: COLORS.systemBlue,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 18
   },
   resetBtnText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700'
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600'
   }
 });

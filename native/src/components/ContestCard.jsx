@@ -22,26 +22,22 @@ export function ContestCard({
     contest.endTimeMs
   );
 
-  const brandColor = contest.platformColor || COLORS.accentBlue;
+  const brandColor = contest.platformColor || COLORS.systemBlue;
 
   return (
     <TouchableOpacity
-      style={[
-        styles.card,
-        { borderLeftColor: brandColor },
-        isLive && styles.cardLive
-      ]}
+      style={styles.card}
       onPress={() => onSelectContest(contest)}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
     >
-      {/* Top Meta Line: Platform + Division + Timer Badge */}
+      {/* Top Meta Row: Platform + Division + Timer Badge */}
       <View style={styles.topRow}>
         <View style={styles.platformMeta}>
-          <PlatformIcon platform={contest.platform} size={14} />
+          <PlatformIcon platform={contest.platform} size={15} />
           <Text style={[styles.platformName, { color: brandColor }]}>
             {contest.platformName}
           </Text>
-          {contest.divisions?.[0] && (
+          {Boolean(contest.divisions?.[0]) && (
             <View style={styles.divisionPill}>
               <Text style={styles.divisionText}>{contest.divisions[0]}</Text>
             </View>
@@ -96,35 +92,29 @@ export function ContestCard({
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickActionBtn}
-            onPress={(e) => {
-              openGoogleCalendar(contest);
-            }}
+            onPress={() => openGoogleCalendar(contest)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
           >
-            <Ionicons name="calendar-outline" size={14} color={COLORS.textMuted} />
+            <Ionicons name="calendar-outline" size={15} color={COLORS.secondaryLabel} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickActionBtn}
-            onPress={(e) => {
-              shareContest(contest);
-            }}
+            onPress={() => shareContest(contest)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
           >
-            <Feather name="share-2" size={13} color={COLORS.textMuted} />
+            <Feather name="share-2" size={14} color={COLORS.secondaryLabel} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.arenaPill, { backgroundColor: brandColor }]}
-            onPress={(e) => {
-              openContestArena(contest.url);
-            }}
-            activeOpacity={0.8}
+            onPress={() => openContestArena(contest.url)}
+            activeOpacity={0.7}
           >
-            <Text style={styles.arenaText}>Arena</Text>
-            <Feather name="arrow-up-right" size={12} color="#fff" />
+            <Text style={styles.arenaPillText}>Arena</Text>
+            <Feather name="arrow-up-right" size={11} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -134,24 +124,16 @@ export function ContestCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    borderLeftWidth: 3.5,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 8
-  },
-  cardLive: {
-    borderColor: 'rgba(239, 68, 68, 0.35)',
-    backgroundColor: 'rgba(239, 68, 68, 0.04)'
+    backgroundColor: COLORS.secondarySystemBackground,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10
   },
   topRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6
+    justifyContent: 'space-between',
+    marginBottom: 8
   },
   platformMeta: {
     flexDirection: 'row',
@@ -159,95 +141,96 @@ const styles = StyleSheet.create({
     gap: 6
   },
   platformName: {
-    fontSize: 11,
-    fontWeight: '700'
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.2
   },
   divisionPill: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: 4
   },
   divisionText: {
-    color: COLORS.textMuted,
-    fontSize: 9,
+    color: COLORS.secondaryLabel,
+    fontSize: 10,
     fontWeight: '600'
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.badgeLiveBg,
-    borderColor: COLORS.badgeLiveBorder,
-    borderWidth: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8
+    backgroundColor: 'rgba(255, 69, 58, 0.16)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10
   },
   liveDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: COLORS.accentRed
+    backgroundColor: COLORS.systemRed
   },
   liveText: {
-    color: COLORS.accentRed,
-    fontSize: 9,
-    fontWeight: '800'
-  },
-  countdownBadge: {
-    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8
-  },
-  countdownText: {
-    color: COLORS.accentBlue,
+    color: COLORS.systemRed,
     fontSize: 10,
     fontWeight: '700'
   },
+  countdownBadge: {
+    backgroundColor: 'rgba(118, 118, 128, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8
+  },
+  countdownText: {
+    color: COLORS.secondaryLabel,
+    fontSize: 11,
+    fontWeight: '600'
+  },
   title: {
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-    lineHeight: 19,
-    marginBottom: 8
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+    lineHeight: 22,
+    color: COLORS.label,
+    marginBottom: 10
   },
   liveProgressWrap: {
-    marginBottom: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    padding: 6,
-    borderRadius: 6
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10
   },
   liveProgressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 3
+    marginBottom: 4
   },
   liveProgressTime: {
-    color: COLORS.accentRed,
-    fontSize: 9,
-    fontWeight: '700'
+    color: COLORS.systemRed,
+    fontSize: 11,
+    fontWeight: '600'
   },
   liveProgressPercent: {
-    color: COLORS.textMuted,
-    fontSize: 9,
-    fontWeight: '700'
+    color: COLORS.secondaryLabel,
+    fontSize: 11,
+    fontWeight: '600'
   },
   progressTrack: {
-    height: 3,
+    height: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 1.5,
+    borderRadius: 2,
     overflow: 'hidden'
   },
   progressBar: {
     height: '100%',
-    backgroundColor: COLORS.accentRed
+    backgroundColor: COLORS.systemRed,
+    borderRadius: 2
   },
   bottomRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingTop: 4
   },
   scheduleInfo: {
@@ -255,9 +238,8 @@ const styles = StyleSheet.create({
     marginRight: 8
   },
   scheduleText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '500'
+    color: COLORS.secondaryLabel,
+    fontSize: 13
   },
   quickActions: {
     flexDirection: 'row',
@@ -265,10 +247,10 @@ const styles = StyleSheet.create({
     gap: 8
   },
   quickActionBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(118, 118, 128, 0.18)',
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -276,13 +258,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 12
   },
-  arenaText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '800'
+  arenaPillText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700'
   }
 });

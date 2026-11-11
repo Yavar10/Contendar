@@ -1,37 +1,37 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SHADOWS } from '../constants/theme';
 
 export function ViewSwitcher({ viewMode, onViewModeChange }) {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={[styles.tab, viewMode === 'calendar' && styles.tabActive]}
+        style={[styles.segment, viewMode === 'calendar' && styles.segmentActive]}
         onPress={() => onViewModeChange('calendar')}
         activeOpacity={0.7}
       >
         <Ionicons
           name="calendar"
-          size={13}
-          color={viewMode === 'calendar' ? COLORS.appleBlue : COLORS.textMuted}
+          size={14}
+          color={viewMode === 'calendar' ? COLORS.label : COLORS.secondaryLabel}
         />
-        <Text style={[styles.tabText, viewMode === 'calendar' && styles.tabTextActive]}>
-          Calendar View
+        <Text style={[styles.segmentText, viewMode === 'calendar' && styles.segmentTextActive]}>
+          Calendar
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.tab, viewMode === 'list' && styles.tabActive]}
+        style={[styles.segment, viewMode === 'list' && styles.segmentActive]}
         onPress={() => onViewModeChange('list')}
         activeOpacity={0.7}
       >
-        <Feather
+        <Ionicons
           name="list"
-          size={13}
-          color={viewMode === 'list' ? COLORS.appleBlue : COLORS.textMuted}
+          size={14}
+          color={viewMode === 'list' ? COLORS.label : COLORS.secondaryLabel}
         />
-        <Text style={[styles.tabText, viewMode === 'list' && styles.tabTextActive]}>
+        <Text style={[styles.segmentText, viewMode === 'list' && styles.segmentTextActive]}>
           Timeline
         </Text>
       </TouchableOpacity>
@@ -42,35 +42,32 @@ export function ViewSwitcher({ viewMode, onViewModeChange }) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 14,
+    height: 34,
+    backgroundColor: 'rgba(118, 118, 128, 0.24)',
+    borderRadius: 9,
     marginHorizontal: 16,
-    marginVertical: 4,
-    padding: 3
+    marginVertical: 6,
+    padding: 2
   },
-  tab: {
+  segment: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 7,
-    borderRadius: 11
+    borderRadius: 7
   },
-  tabActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(10, 132, 255, 0.4)'
+  segmentActive: {
+    backgroundColor: '#3A3A3C',
+    ...SHADOWS.subtle
   },
-  tabText: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.secondaryLabel
+  },
+  segmentTextActive: {
+    color: COLORS.label,
     fontWeight: '600'
-  },
-  tabTextActive: {
-    color: '#fff',
-    fontWeight: '700'
   }
 });

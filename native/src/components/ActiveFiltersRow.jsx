@@ -22,8 +22,8 @@ export function ActiveFiltersRow({
   }
 
   const getStatusLabel = (status) => {
-    if (status === 'live') return '🔴 Live Only';
-    if (status === 'upcoming') return '⏳ Upcoming Only';
+    if (status === 'live') return 'Live Only';
+    if (status === 'upcoming') return 'Upcoming Only';
     return status;
   };
 
@@ -39,10 +39,10 @@ export function ActiveFiltersRow({
           <TouchableOpacity
             style={styles.activeChip}
             onPress={onResetStatus}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
           >
             <Text style={styles.activeChipText}>{getStatusLabel(statusFilter)}</Text>
-            <Ionicons name="close" size={12} color={COLORS.accentBlue} />
+            <Ionicons name="close-circle" size={14} color={COLORS.systemBlue} />
           </TouchableOpacity>
         )}
 
@@ -53,10 +53,10 @@ export function ActiveFiltersRow({
               key={div}
               style={styles.activeChip}
               onPress={() => onRemoveDivision(div)}
-              activeOpacity={0.7}
+              activeOpacity={0.6}
             >
               <Text style={styles.activeChipText}>{div}</Text>
-              <Ionicons name="close" size={12} color={COLORS.accentBlue} />
+              <Ionicons name="close-circle" size={14} color={COLORS.systemBlue} />
             </TouchableOpacity>
           ))}
 
@@ -65,16 +65,16 @@ export function ActiveFiltersRow({
           <TouchableOpacity
             style={styles.activeChip}
             onPress={onClearSearch}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
           >
             <Text style={styles.activeChipText}>"{searchQuery}"</Text>
-            <Ionicons name="close" size={12} color={COLORS.accentBlue} />
+            <Ionicons name="close-circle" size={14} color={COLORS.systemBlue} />
           </TouchableOpacity>
         )}
 
-        {/* Reset All text button */}
-        <TouchableOpacity style={styles.resetBtn} onPress={onResetAll} activeOpacity={0.7}>
-          <Text style={styles.resetText}>Reset All</Text>
+        {/* Reset All button */}
+        <TouchableOpacity style={styles.resetBtn} onPress={onResetAll} activeOpacity={0.6}>
+          <Text style={styles.resetText}>Reset</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -93,28 +93,24 @@ const styles = StyleSheet.create({
   activeChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(59, 130, 246, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 12
+    gap: 4,
+    backgroundColor: 'rgba(10, 132, 255, 0.14)',
+    paddingHorizontal: 10,
+    height: 28,
+    borderRadius: 14
   },
   activeChipText: {
-    color: COLORS.accentBlue,
-    fontSize: 11,
-    fontWeight: '700'
+    color: COLORS.systemBlue,
+    fontSize: 12,
+    fontWeight: '600'
   },
   resetBtn: {
     paddingHorizontal: 8,
     paddingVertical: 4
   },
   resetText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '600',
-    textDecorationLine: 'underline'
+    color: COLORS.secondaryLabel,
+    fontSize: 12,
+    fontWeight: '500'
   }
 });
-

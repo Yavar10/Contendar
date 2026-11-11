@@ -54,44 +54,40 @@ export function FilterModal({
         <TouchableOpacity style={styles.dismissOverlay} onPress={onClose} activeOpacity={1} />
 
         <View style={styles.sheetContainer}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>Filter Contests</Text>
-              <Text style={styles.headerSubtitle}>Refine timeline by status, round or platform</Text>
-            </View>
+          <View style={styles.grabHandle} />
 
-            <View style={styles.headerRight}>
-              <TouchableOpacity onPress={onResetAllFilters} style={styles.resetBtn}>
-                <Text style={styles.resetText}>Reset All</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-                <Ionicons name="close" size={20} color={COLORS.textPrimary} />
-              </TouchableOpacity>
-            </View>
+          {/* Navigation Bar */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onResetAllFilters} style={styles.headerBtn} activeOpacity={0.6}>
+              <Text style={styles.resetBtnText}>Reset</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.headerTitle}>Filters</Text>
+
+            <TouchableOpacity onPress={onClose} style={styles.headerBtn} activeOpacity={0.6}>
+              <Text style={styles.doneBtnText}>Done</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-            {/* Status section */}
+            {/* Status Section: iOS Segmented Control */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>CONTEST STATUS</Text>
-              <View style={styles.statusRow}>
+              <Text style={styles.sectionTitle}>STATUS</Text>
+              <View style={styles.segmentedControl}>
                 {[
-                  { id: 'all', label: 'All Contests' },
-                  { id: 'live', label: '🔴 Live Now' },
-                  { id: 'upcoming', label: '⏳ Upcoming' }
+                  { id: 'all', label: 'All' },
+                  { id: 'live', label: 'Live' },
+                  { id: 'upcoming', label: 'Upcoming' }
                 ].map((s) => {
                   const isActive = statusFilter === s.id;
                   return (
                     <TouchableOpacity
                       key={s.id}
-                      style={[styles.statusTab, isActive && styles.statusTabActive]}
+                      style={[styles.segment, isActive && styles.segmentActive]}
                       onPress={() => onStatusFilterChange(s.id)}
                       activeOpacity={0.7}
                     >
-                      <Text
-                        style={[styles.statusTabText, isActive && styles.statusTabTextActive]}
-                      >
+                      <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
                         {s.label}
                       </Text>
                     </TouchableOpacity>
@@ -100,22 +96,64 @@ export function FilterModal({
               </View>
             </View>
 
-            {/* Division Chips */}
+            {/* Platforms Section: Inset Grouped Checklist */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>PLATFORMS</Text>
+              <View style={styles.groupedTable}>
+                {/* All platforms row */}
+                <TouchableOpacity
+                  style={styles.tableRow}
+                  onPress={onSelectAllPlatforms}
+                  activeOpacity={0.6}
+                >
+                  <Text style={styles.tableRowLabel}>All Platforms</Text>
+                  {isAllPlatformsSelected && (
+                    <Ionicons name="checkmark" size={18} color={COLORS.systemBlue} />
+                  )}
+                </TouchableOpacity>
+
+                {platforms.map((p, idx) => {
+                  const isSelected = selectedPlatforms.includes(p.id);
+                  const isLast = idx === platforms.length - 1;
+
+                  return (
+                    <React.Fragment key={p.id}>
+                      <View style={styles.separator} />
+                      <TouchableOpacity
+                        style={styles.tableRow}
+                        onPress={() => onTogglePlatform(p.id)}
+                        activeOpacity={0.6}
+                      >
+                        <View style={styles.platformRowLeft}>
+                          <PlatformIcon platform={p.id} size={16} />
+                          <Text style={styles.tableRowLabel}>{p.name}</Text>
+                        </View>
+                        {isSelected && (
+                          <Ionicons name="checkmark" size={18} color={COLORS.systemBlue} />
+                        )}
+                      </TouchableOpacity>
+                    </React.Fragment>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Divisions & Formats Section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>DIVISIONS & ROUND TYPES</Text>
               <View style={styles.chipsWrap}>
                 <TouchableOpacity
                   style={[
-                    styles.divisionChip,
-                    isAllDivisionsSelected && styles.divisionChipActive
+                    styles.chip,
+                    isAllDivisionsSelected && styles.chipActive
                   ]}
                   onPress={onSelectAllDivisions}
-                  activeOpacity={0.7}
+                  activeOpacity={0.6}
                 >
                   <Text
                     style={[
-                      styles.divisionChipText,
-                      isAllDivisionsSelected && styles.divisionChipTextActive
+                      styles.chipText,
+                      isAllDivisionsSelected && styles.chipTextActive
                     ]}
                   >
                     All Divisions
@@ -128,73 +166,19 @@ export function FilterModal({
                     <TouchableOpacity
                       key={div}
                       style={[
-                        styles.divisionChip,
-                        isSelected && styles.divisionChipActive
+                        styles.chip,
+                        isSelected && styles.chipActive
                       ]}
                       onPress={() => onToggleDivision(div)}
-                      activeOpacity={0.7}
+                      activeOpacity={0.6}
                     >
                       <Text
                         style={[
-                          styles.divisionChipText,
-                          isSelected && styles.divisionChipTextActive
+                          styles.chipText,
+                          isSelected && styles.chipTextActive
                         ]}
                       >
                         {div}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Platforms Multi-select */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>PLATFORMS</Text>
-              <View style={styles.chipsWrap}>
-                <TouchableOpacity
-                  style={[
-                    styles.platformChip,
-                    isAllPlatformsSelected && styles.platformChipActive
-                  ]}
-                  onPress={onSelectAllPlatforms}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.platformChipText,
-                      isAllPlatformsSelected && styles.platformChipTextActive
-                    ]}
-                  >
-                    All Platforms
-                  </Text>
-                </TouchableOpacity>
-
-                {platforms.map((p) => {
-                  const isSelected = selectedPlatforms.includes(p.id);
-                  const brandColor = p.color || COLORS.accentBlue;
-
-                  return (
-                    <TouchableOpacity
-                      key={p.id}
-                      style={[
-                        styles.platformChip,
-                        isSelected && {
-                          borderColor: brandColor,
-                          backgroundColor: p.badgeBg || 'rgba(59, 130, 246, 0.15)'
-                        }
-                      ]}
-                      onPress={() => onTogglePlatform(p.id)}
-                      activeOpacity={0.7}
-                    >
-                      <PlatformIcon platform={p.id} size={14} />
-                      <Text
-                        style={[
-                          styles.platformChipText,
-                          isSelected && { color: brandColor, fontWeight: '700' }
-                        ]}
-                      >
-                        {p.name}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -220,168 +204,155 @@ export function FilterModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'flex-end'
   },
   dismissOverlay: {
     flex: 1
   },
   sheetContainer: {
-    backgroundColor: COLORS.bgCard,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-    maxHeight: '80%',
+    backgroundColor: COLORS.secondarySystemBackground,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '82%',
     paddingBottom: 24
+  },
+  grabHandle: {
+    width: 36,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 4
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderSubtle
+    paddingHorizontal: 20,
+    paddingVertical: 12
+  },
+  headerBtn: {
+    paddingVertical: 4,
+    minWidth: 50
   },
   headerTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 16,
-    fontWeight: '800'
+    fontSize: 17,
+    fontWeight: '600',
+    color: COLORS.label
   },
-  headerSubtitle: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    marginTop: 2
+  resetBtnText: {
+    fontSize: 17,
+    color: COLORS.secondaryLabel
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
-  },
-  resetBtn: {
-    padding: 4
-  },
-  resetText: {
-    color: COLORS.accentBlue,
-    fontSize: 12,
-    fontWeight: '600'
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center'
+  doneBtnText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: COLORS.systemBlue,
+    textAlign: 'right'
   },
   body: {
-    padding: 16
+    paddingHorizontal: 20
   },
   section: {
-    marginBottom: 18
+    marginBottom: 20
   },
   sectionTitle: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    marginBottom: 8
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    color: COLORS.secondaryLabel,
+    marginBottom: 8,
+    paddingLeft: 2
   },
-  statusRow: {
+  segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: COLORS.bgSecondary,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    borderRadius: 10,
-    padding: 3,
-    gap: 4
+    height: 36,
+    backgroundColor: 'rgba(118, 118, 128, 0.24)',
+    borderRadius: 9,
+    padding: 2
   },
-  statusTab: {
+  segment: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    borderRadius: 7
   },
-  statusTabActive: {
-    backgroundColor: COLORS.bgCardHover,
-    borderWidth: 1,
-    borderColor: COLORS.borderActive
+  segmentActive: {
+    backgroundColor: '#3A3A3C'
   },
-  statusTabText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.secondaryLabel
+  },
+  segmentTextActive: {
+    color: COLORS.label,
     fontWeight: '600'
   },
-  statusTabTextActive: {
-    color: COLORS.textPrimary,
-    fontWeight: '700'
+  groupedTable: {
+    backgroundColor: COLORS.tertiarySystemBackground,
+    borderRadius: 12,
+    overflow: 'hidden'
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12
+  },
+  platformRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10
+  },
+  tableRowLabel: {
+    fontSize: 16,
+    color: COLORS.label
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(84, 84, 88, 0.36)'
   },
   chipsWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8
   },
-  divisionChip: {
-    backgroundColor: COLORS.bgSecondary,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
+  chip: {
+    backgroundColor: COLORS.tertiarySystemBackground,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 12
+    borderRadius: 16
   },
-  divisionChipActive: {
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    borderColor: COLORS.accentIndigo
+  chipActive: {
+    backgroundColor: '#FFFFFF'
   },
-  divisionChipText: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+  chipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.secondaryLabel
+  },
+  chipTextActive: {
+    color: '#000000',
     fontWeight: '600'
-  },
-  divisionChipTextActive: {
-    color: '#a5b4fc',
-    fontWeight: '700'
-  },
-  platformChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: COLORS.bgSecondary,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 14
-  },
-  platformChipActive: {
-    borderColor: COLORS.accentBlue,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)'
-  },
-  platformChipText: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-    fontWeight: '600'
-  },
-  platformChipTextActive: {
-    color: COLORS.accentBlue,
-    fontWeight: '700'
   },
   footer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 8
   },
   applyBtn: {
-    backgroundColor: COLORS.accentBlue,
-    borderRadius: 12,
-    paddingVertical: 13,
+    backgroundColor: COLORS.systemBlue,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center'
   },
   applyBtnText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '800'
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600'
   }
 });
-

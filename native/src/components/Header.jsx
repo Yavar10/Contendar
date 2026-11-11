@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS } from '../constants/theme';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, TYPOGRAPHY } from '../constants/theme';
 
 export function Header({
   liveCount,
@@ -12,65 +12,77 @@ export function Header({
   onOpenSettingsModal,
   hasApiError
 }) {
+  const todayFormatted = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  }).format(new Date()).toUpperCase();
+
   return (
     <View style={styles.header}>
-      {/* Brand & Live Indicator */}
-      <View style={styles.brandRow}>
-        <View style={styles.logoBadge}>
-          <MaterialCommunityIcons name="radar" size={18} color={COLORS.accentBlue} />
-        </View>
-        <Text style={styles.brandTitle}>CONTENDAR</Text>
-
+      {/* Top date caption in Apple HIG style */}
+      <View style={styles.topCaptionRow}>
+        <Text style={styles.dateCaption}>{todayFormatted}</Text>
         {liveCount > 0 && (
-          <View style={styles.liveBadge}>
+          <View style={styles.liveIndicatorPill}>
             <View style={styles.livePulseDot} />
-            <Text style={styles.liveText}>{liveCount} LIVE</Text>
+            <Text style={styles.liveIndicatorText}>{liveCount} LIVE NOW</Text>
           </View>
         )}
       </View>
 
-      {/* Right Actions */}
-      <View style={styles.actionsRow}>
-        {/* Search Toggle */}
-        <TouchableOpacity
-          style={[styles.iconBtn, isSearchVisible && styles.iconBtnActive]}
-          onPress={onToggleSearch}
-          activeOpacity={0.7}
-        >
-          <Feather
-            name={isSearchVisible ? 'x' : 'search'}
-            size={17}
-            color={isSearchVisible ? COLORS.accentBlue : COLORS.textSecondary}
-          />
-        </TouchableOpacity>
+      {/* Large Title Navigation Bar */}
+      <View style={styles.mainRow}>
+        <View style={styles.titleGroup}>
+          <Text style={styles.largeTitle}>Contests</Text>
+        </View>
 
-        {/* Filter Modal Trigger */}
-        <TouchableOpacity
-          style={[styles.iconBtn, activeFilterCount > 0 && styles.iconBtnFilterActive]}
-          onPress={onOpenFilterModal}
-          activeOpacity={0.7}
-        >
-          <Feather
-            name="sliders"
-            size={16}
-            color={activeFilterCount > 0 ? COLORS.accentBlue : COLORS.textSecondary}
-          />
-          {activeFilterCount > 0 && (
-            <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        {/* Right SF Action Buttons */}
+        <View style={styles.actionsRow}>
+          {/* Search Action */}
+          <TouchableOpacity
+            style={[styles.actionBtn, isSearchVisible && styles.actionBtnActive]}
+            onPress={onToggleSearch}
+            activeOpacity={0.6}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Ionicons
+              name={isSearchVisible ? 'close' : 'search'}
+              size={18}
+              color={isSearchVisible ? COLORS.systemBlue : COLORS.label}
+            />
+          </TouchableOpacity>
 
-        {/* Settings & Timezone Trigger */}
-        <TouchableOpacity
-          style={styles.iconBtn}
-          onPress={onOpenSettingsModal}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="settings-sharp" size={16} color={COLORS.textSecondary} />
-          {hasApiError && <View style={styles.errorDot} />}
-        </TouchableOpacity>
+          {/* Filter Action */}
+          <TouchableOpacity
+            style={[styles.actionBtn, activeFilterCount > 0 && styles.actionBtnFilterActive]}
+            onPress={onOpenFilterModal}
+            activeOpacity={0.6}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Ionicons
+              name="slider-horizontal"
+              size={18}
+              color={activeFilterCount > 0 ? COLORS.systemBlue : COLORS.label}
+            />
+            {activeFilterCount > 0 && (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Settings Action */}
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={onOpenSettingsModal}
+            activeOpacity={0.6}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Ionicons name="settings-outline" size={19} color={COLORS.label} />
+            {hasApiError && <View style={styles.errorDot} />}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -78,98 +90,95 @@ export function Header({
 
 const styles = StyleSheet.create({
   header: {
-    height: 52,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 10,
+    backgroundColor: COLORS.systemBackground
+  },
+  topCaptionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.bgPrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderSubtle
+    marginBottom: 2
   },
-  brandRow: {
+  dateCaption: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    color: COLORS.secondaryLabel
+  },
+  liveIndicatorPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
-  },
-  logoBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  brandTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    letterSpacing: 1.1
-  },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: COLORS.badgeLiveBg,
-    borderColor: COLORS.badgeLiveBorder,
-    borderWidth: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginLeft: 4
+    gap: 5,
+    backgroundColor: 'rgba(255, 69, 58, 0.14)',
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 12
   },
   livePulseDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: COLORS.accentRed
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.systemRed
   },
-  liveText: {
-    color: COLORS.accentRed,
+  liveIndicatorText: {
+    color: COLORS.systemRed,
     fontSize: 10,
-    fontWeight: '800'
+    fontWeight: '700',
+    letterSpacing: 0.3
+  },
+  mainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 2
+  },
+  titleGroup: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8
+  },
+  largeTitle: {
+    ...TYPOGRAPHY.largeTitle,
+    color: COLORS.label
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8
   },
-  iconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
+  actionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(118, 118, 128, 0.24)',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative'
   },
-  iconBtnActive: {
-    borderColor: COLORS.accentBlue,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)'
+  actionBtnActive: {
+    backgroundColor: 'rgba(10, 132, 255, 0.2)'
   },
-  iconBtnFilterActive: {
-    borderColor: COLORS.accentBlue,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)'
+  actionBtnFilterActive: {
+    backgroundColor: 'rgba(10, 132, 255, 0.18)'
   },
   filterBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: COLORS.accentBlue,
-    width: 16,
+    top: -2,
+    right: -2,
+    backgroundColor: COLORS.systemBlue,
+    minWidth: 16,
     height: 16,
     borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    paddingHorizontal: 4
   },
   filterBadgeText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: '800'
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700'
   },
   errorDot: {
     position: 'absolute',
@@ -178,6 +187,6 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: COLORS.accentRed
+    backgroundColor: COLORS.systemRed
   }
 });

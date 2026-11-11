@@ -6,7 +6,8 @@ import {
   RefreshControl,
   ActivityIndicator,
   Text,
-  TouchableOpacity
+  TouchableOpacity,
+  Platform
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -18,7 +19,6 @@ import { RadarHero } from './src/components/RadarHero';
 import { ViewSwitcher } from './src/components/ViewSwitcher';
 import { PlatformChips } from './src/components/PlatformChips';
 import { ActiveFiltersRow } from './src/components/ActiveFiltersRow';
-import { TelemetryTicker } from './src/components/TelemetryTicker';
 import { ListView } from './src/components/ListView';
 import { CalendarView } from './src/components/CalendarView';
 
@@ -28,7 +28,7 @@ import { FilterModal } from './src/components/FilterModal';
 import { SettingsModal } from './src/components/SettingsModal';
 
 import { getPlatforms, getContests, getApiBaseUrl } from './src/services/api';
-import { COLORS } from './src/constants/theme';
+import { COLORS, TYPOGRAPHY } from './src/constants/theme';
 
 export default function App() {
   const [platforms, setPlatforms] = useState([]);
@@ -37,7 +37,7 @@ export default function App() {
   const [selectedDivisions, setSelectedDivisions] = useState(['All']);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'live' | 'upcoming'
-  const [viewMode, setViewMode] = useState('calendar'); // Default to 'calendar' so calendar fits on starting screen
+  const [viewMode, setViewMode] = useState('calendar'); // Default to 'calendar'
   const [timezone, setTimezone] = useState('local');
 
   // UI state
@@ -52,7 +52,7 @@ export default function App() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  // Centralized 1-second ticker for all live countdowns (prevents multiple intervals)
+  // Centralized 1-second ticker for live countdowns
   const [nowMs, setNowMs] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNowMs(Date.now()), 1000);
@@ -180,7 +180,7 @@ export default function App() {
     return counts;
   }, [allContests]);
 
-  // Client-side instant filtered contests
+  // Filtered contests
   const filteredContests = useMemo(() => {
     return allContests.filter((contest) => {
       // 1. Platform filter
@@ -246,9 +246,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <StatusBar style="light" backgroundColor={COLORS.bgPrimary} />
+        <StatusBar style="light" backgroundColor={COLORS.systemBackground} />
 
-        {/* 1. Apple-style Top Header */}
+        {/* 1. Apple Large Title Navigation Header */}
         <Header
           liveCount={liveCount}
           isSearchVisible={isSearchVisible}
@@ -262,7 +262,7 @@ export default function App() {
           hasApiError={Boolean(apiError)}
         />
 
-        {/* 2. Expandable Search Bar */}
+        {/* 2. Expandable Apple Search Bar */}
         <SearchBar
           visible={isSearchVisible}
           searchQuery={searchQuery}
@@ -273,7 +273,7 @@ export default function App() {
           }}
         />
 
-        {/* 3. Main Scrollable Dashboard */}
+        {/* 3. Main Dashboard Scroll */}
         <ScrollView
           style={styles.mainScroll}
           contentContainerStyle={styles.mainScrollContent}
@@ -282,12 +282,12 @@ export default function App() {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={() => loadData(true)}
-              tintColor={COLORS.appleBlue}
-              colors={[COLORS.appleBlue]}
+              tintColor={COLORS.systemBlue}
+              colors={[COLORS.systemBlue]}
             />
           }
         >
-          {/* A. Graphic Up Top: Alive Radar Hero Section */}
+          {/* A. Graphic Up Top: Chrono Radar Precision Instrument */}
           {!apiError && (
             <RadarHero
               contests={allContests}
@@ -296,7 +296,7 @@ export default function App() {
             />
           )}
 
-          {/* B. Platform Frosted Glass Pills */}
+          {/* B. Platform Filter Chips */}
           {platforms.length > 0 && (
             <PlatformChips
               platforms={platforms}
@@ -318,31 +318,29 @@ export default function App() {
             onResetAll={handleResetAllFilters}
           />
 
-          {/* D. Segmented View Switcher: Calendar View vs Timeline */}
+          {/* D. iOS Segmented Control: Calendar vs Timeline */}
           {!apiError && (
             <ViewSwitcher viewMode={viewMode} onViewModeChange={setViewMode} />
           )}
 
-          {/* E. Content: Calendar View Fitted at Bottom of Starting Screen, or Timeline */}
+          {/* E. Content: Calendar View Fitted at Bottom or Timeline */}
           {isLoading ? (
             <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color={COLORS.appleBlue} />
-              <Text style={styles.loadingTitle}>Connecting to Radar Feeds...</Text>
+              <ActivityIndicator size="large" color={COLORS.systemBlue} />
+              <Text style={styles.loadingTitle}>Connecting to Feeds...</Text>
               <Text style={styles.loadingSubtitle}>
                 Aggregating Codeforces, LeetCode, CodeChef, and AtCoder
               </Text>
             </View>
           ) : apiError && allContests.length === 0 ? (
-            /* Backend API Down Prompt Card */
+            /* Apple System Empty / Offline State */
             <View style={styles.errorCard}>
               <View style={styles.errorIconBox}>
-                <Feather name="wifi-off" size={28} color={COLORS.appleRed} />
+                <Ionicons name="cloud-offline-outline" size={32} color={COLORS.systemRed} />
               </View>
-              <Text style={styles.errorTitle}>Backend Server Unreachable</Text>
+              <Text style={styles.errorTitle}>Cannot Connect to Server</Text>
               <Text style={styles.errorDesc}>
-                Could not connect to backend at{'\n'}
-                <Text style={styles.errorUrl}>{getApiBaseUrl()}</Text>
-                {'\n'}Please start the backend server to load live contests.
+                {`Could not connect to backend at\n${getApiBaseUrl()}\nPlease start the backend server to load live contests.`}
               </Text>
               <View style={styles.terminalBox}>
                 <Text style={styles.terminalText}>cd backend && npm run dev</Text>
@@ -354,9 +352,8 @@ export default function App() {
                   disabled={isRefreshing}
                   activeOpacity={0.7}
                 >
-                  <Feather name="refresh-cw" size={13} color="#fff" />
                   <Text style={styles.retryBtnText}>
-                    {isRefreshing ? 'Retrying...' : 'Retry Connection'}
+                    {isRefreshing ? 'Retrying...' : 'Try Again'}
                   </Text>
                 </TouchableOpacity>
 
@@ -365,13 +362,12 @@ export default function App() {
                   onPress={() => setIsSettingsModalOpen(true)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="settings-outline" size={13} color={COLORS.textPrimary} />
                   <Text style={styles.configBtnText}>Server IP</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : viewMode === 'calendar' ? (
-            /* Fits the Calendar in the Starting Screen at the Bottom */
+            /* Fits Calendar View at the Bottom of Starting Screen */
             <CalendarView
               contests={filteredContests}
               timezone={timezone}
@@ -389,14 +385,14 @@ export default function App() {
           )}
         </ScrollView>
 
-        {/* Deep Contest Details Modal */}
+        {/* Contest Details Sheet */}
         <ContestModal
           contest={selectedContest}
           timezone={timezone}
           onClose={() => setSelectedContest(null)}
         />
 
-        {/* Calendar Day Inspection Drawer */}
+        {/* Calendar Day Inspection Sheet */}
         <DayDetailModal
           dayData={selectedDay}
           timezone={timezone}
@@ -407,7 +403,7 @@ export default function App() {
           }}
         />
 
-        {/* Filter Bottom Sheet Modal */}
+        {/* Filter Sheet */}
         <FilterModal
           visible={isFilterModalOpen}
           onClose={() => setIsFilterModalOpen(false)}
@@ -424,7 +420,7 @@ export default function App() {
           resultCount={filteredContests.length}
         />
 
-        {/* Settings & Timezone Modal */}
+        {/* Settings & Timezone Sheet */}
         <SettingsModal
           visible={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
@@ -442,11 +438,11 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary
+    backgroundColor: COLORS.systemBackground
   },
   mainScroll: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary
+    backgroundColor: COLORS.systemBackground
   },
   mainScrollContent: {
     paddingBottom: 28
@@ -456,23 +452,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 40,
     marginHorizontal: 16,
-    marginTop: 18,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    borderRadius: 18
+    marginTop: 20,
+    backgroundColor: COLORS.secondarySystemBackground,
+    borderRadius: 20
   },
   loadingTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 12
+    color: COLORS.label,
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: 14
   },
   loadingSubtitle: {
-    color: COLORS.textMuted,
-    fontSize: 11,
+    color: COLORS.secondaryLabel,
+    fontSize: 12,
     textAlign: 'center',
-    marginTop: 4
+    marginTop: 4,
+    maxWidth: 240
   },
   errorCard: {
     alignItems: 'center',
@@ -480,85 +475,70 @@ const styles = StyleSheet.create({
     padding: 28,
     marginHorizontal: 16,
     marginTop: 20,
-    backgroundColor: 'rgba(255, 69, 58, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 69, 58, 0.25)',
-    borderRadius: 18
+    backgroundColor: COLORS.secondarySystemBackground,
+    borderRadius: 20
   },
   errorIconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(255, 69, 58, 0.14)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12
+    marginBottom: 14
   },
   errorTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 15,
-    fontWeight: '800',
+    color: COLORS.label,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.2,
     marginBottom: 6
   },
   errorDesc: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+    color: COLORS.secondaryLabel,
+    fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
-    marginBottom: 12
-  },
-  errorUrl: {
-    color: COLORS.appleRed,
-    fontWeight: '700'
-  },
-  terminalBox: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
     marginBottom: 16
   },
+  terminalBox: {
+    backgroundColor: '#000000',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 20
+  },
   terminalText: {
-    color: COLORS.appleBlue,
-    fontSize: 11,
-    fontFamily: 'monospace',
-    fontWeight: '600'
+    color: COLORS.systemTeal,
+    fontSize: 13,
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
+    fontWeight: '500'
   },
   errorActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
+    gap: 10
   },
   retryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: COLORS.appleBlue,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 10
+    backgroundColor: COLORS.systemBlue,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 18
   },
   retryBtnText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700'
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600'
   },
   configBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 10
+    backgroundColor: 'rgba(118, 118, 128, 0.24)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 18
   },
   configBtnText: {
-    color: COLORS.textPrimary,
-    fontSize: 12,
-    fontWeight: '600'
+    color: COLORS.label,
+    fontSize: 14,
+    fontWeight: '500'
   }
 });
