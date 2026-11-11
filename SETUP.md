@@ -267,8 +267,8 @@ The system parses division tags automatically from platform contest metadata and
 - Ensure the backend server is running in a terminal.
 - Check backend logs: external platform APIs may occasionally experience downtime or rate limiting. The backend includes fallback caching to prevent crashes.
 
-### 3. How does the frontend handle offline mode?
-- If the backend is temporarily unreachable, [`frontendweb/src/services/api.js`](file:///d:/Projects/ContestCalender/frontendweb/src/services/api.js) includes safe client-side fallback data so the UI remains operational.
+### 3. How do the frontend and native apps handle backend downtime?
+- If the backend is unreachable or offline, both the web frontend and React Native apps will explicitly prompt you with a connection error card and banner with instructions to run `cd backend && npm run dev` and a 1-click **Retry Connection** button. No hardcoded or fake data is served.
 
 ---
 

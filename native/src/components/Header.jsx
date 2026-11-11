@@ -1,200 +1,183 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
-import { TIMEZONES } from '../utils/timeUtils';
 
 export function Header({
   liveCount,
-  timezone,
-  onOpenTimezoneModal,
-  onRefresh,
-  isRefreshing,
-  onOpenServerModal,
-  isUsingFallback
+  isSearchVisible,
+  onToggleSearch,
+  onOpenFilterModal,
+  activeFilterCount,
+  onOpenSettingsModal,
+  hasApiError
 }) {
-  const currentTzObj = TIMEZONES.find((t) => t.id === timezone) || { label: 'Local' };
-
   return (
-    <View style={styles.container}>
-      {/* Brand row */}
-      <View style={styles.topRow}>
-        <View style={styles.brandContainer}>
-          <View style={styles.logoBadge}>
-            <MaterialCommunityIcons name="radar" size={20} color="#3b82f6" />
-          </View>
-          <View>
-            <View style={styles.titleRow}>
-              <Text style={styles.brandTitle}>CONTENDAR</Text>
-              <View style={styles.radarDot} />
-            </View>
-            <Text style={styles.brandSubtitle}>CP CHRONO RADAR</Text>
-          </View>
+    <View style={styles.header}>
+      {/* Brand & Live Indicator */}
+      <View style={styles.brandRow}>
+        <View style={styles.logoBadge}>
+          <MaterialCommunityIcons name="radar" size={18} color={COLORS.accentBlue} />
         </View>
+        <Text style={styles.brandTitle}>CONTENDAR</Text>
 
-        {/* Right side actions */}
-        <View style={styles.actionsRow}>
-          {/* Live badge if any */}
-          {liveCount > 0 && (
-            <View style={styles.liveBadge}>
-              <View style={styles.livePulseDot} />
-              <Text style={styles.liveText}>{liveCount} LIVE</Text>
+        {liveCount > 0 && (
+          <View style={styles.liveBadge}>
+            <View style={styles.livePulseDot} />
+            <Text style={styles.liveText}>{liveCount} LIVE</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Right Actions */}
+      <View style={styles.actionsRow}>
+        {/* Search Toggle */}
+        <TouchableOpacity
+          style={[styles.iconBtn, isSearchVisible && styles.iconBtnActive]}
+          onPress={onToggleSearch}
+          activeOpacity={0.7}
+        >
+          <Feather
+            name={isSearchVisible ? 'x' : 'search'}
+            size={17}
+            color={isSearchVisible ? COLORS.accentBlue : COLORS.textSecondary}
+          />
+        </TouchableOpacity>
+
+        {/* Filter Modal Trigger */}
+        <TouchableOpacity
+          style={[styles.iconBtn, activeFilterCount > 0 && styles.iconBtnFilterActive]}
+          onPress={onOpenFilterModal}
+          activeOpacity={0.7}
+        >
+          <Feather
+            name="sliders"
+            size={16}
+            color={activeFilterCount > 0 ? COLORS.accentBlue : COLORS.textSecondary}
+          />
+          {activeFilterCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
             </View>
           )}
+        </TouchableOpacity>
 
-          {/* Timezone picker button */}
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={onOpenTimezoneModal}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="globe-outline" size={15} color={COLORS.accentBlue} />
-            <Text style={styles.actionBtnText}>
-              {currentTzObj.offset ? currentTzObj.label.split(' ')[0] : 'LOCAL'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Server Config / Status */}
-          <TouchableOpacity
-            style={[styles.iconBtn, isUsingFallback && styles.iconBtnWarning]}
-            onPress={onOpenServerModal}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons
-              name={isUsingFallback ? 'server-network-off' : 'server-network'}
-              size={18}
-              color={isUsingFallback ? COLORS.accentAmber : COLORS.accentGreen}
-            />
-          </TouchableOpacity>
-
-          {/* Manual Refresh */}
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={onRefresh}
-            disabled={isRefreshing}
-            activeOpacity={0.7}
-          >
-            {isRefreshing ? (
-              <ActivityIndicator size="small" color={COLORS.accentBlue} />
-            ) : (
-              <Ionicons name="refresh" size={18} color={COLORS.textSecondary} />
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* Settings & Timezone Trigger */}
+        <TouchableOpacity
+          style={styles.iconBtn}
+          onPress={onOpenSettingsModal}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="settings-sharp" size={16} color={COLORS.textSecondary} />
+          {hasApiError && <View style={styles.errorDot} />}
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  header: {
+    height: 52,
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.bgPrimary,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderSubtle,
-    backgroundColor: COLORS.bgPrimary
+    borderBottomColor: COLORS.borderSubtle
   },
-  topRow: {
+  brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  brandContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10
+    gap: 8
   },
   logoBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     backgroundColor: 'rgba(59, 130, 246, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.3)',
     alignItems: 'center',
     justifyContent: 'center'
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4
-  },
   brandTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    letterSpacing: 1.2
+    letterSpacing: 1.1
   },
-  radarDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.accentBlue
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: COLORS.badgeLiveBg,
+    borderColor: COLORS.badgeLiveBorder,
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 4
   },
-  brandSubtitle: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: COLORS.textMuted,
-    letterSpacing: 1
+  livePulseDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: COLORS.accentRed
+  },
+  liveText: {
+    color: COLORS.accentRed,
+    fontSize: 10,
+    fontWeight: '800'
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8
   },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: COLORS.badgeLiveBg,
-    borderColor: COLORS.badgeLiveBorder,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12
-  },
-  livePulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.accentRed
-  },
-  liveText: {
-    color: COLORS.accentRed,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.borderSubtle,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 8
-  },
-  actionBtnText: {
-    color: COLORS.textPrimary,
-    fontSize: 11,
-    fontWeight: '700'
-  },
   iconBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     backgroundColor: COLORS.bgCard,
     borderWidth: 1,
     borderColor: COLORS.borderSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  iconBtnActive: {
+    borderColor: COLORS.accentBlue,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)'
+  },
+  iconBtnFilterActive: {
+    borderColor: COLORS.accentBlue,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)'
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: COLORS.accentBlue,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  iconBtnWarning: {
-    borderColor: 'rgba(245, 158, 11, 0.4)',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)'
+  filterBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '800'
+  },
+  errorDot: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: COLORS.accentRed
   }
 });
-

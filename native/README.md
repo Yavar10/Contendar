@@ -56,23 +56,18 @@ npm start
 
 ---
 
-## 🌐 Connecting to the Backend
+## 🌐 Automatic Backend Detection in Expo
 
-The mobile app connects to the Express backend running in `../backend/`:
+The mobile app automatically connects to the Express backend running on your development machine:
 
-1. Start the backend:
-   ```bash
-   cd ../backend
-   npm run dev
-   ```
-2. In the mobile app:
-   - Tap the **server status icon** (top-right of the header) to open **Backend API Settings**.
-   - Select a quick preset:
-     - **Android Emulator**: `http://10.0.2.2:5000`
-     - **iOS Simulator**: `http://localhost:5000`
-     - **Physical Device**: Enter your machine's local network IP (e.g., `http://192.168.1.50:5000`)
-   - Tap **Test Connection** to verify `/api/health`.
-   - Tap **Save & Apply** to sync live contests!
+1. **Auto-Discovery via Expo**:
+   - The app uses `expo-constants` to detect your computer's LAN IP address from the Expo packager host (e.g. `192.168.1.X:5000`).
+   - When running on a physical phone via **Expo Go**, it connects automatically with **zero configuration**!
+   - On Android emulator, it falls back to `10.0.2.2:5000`. On iOS simulator/web, it connects to `localhost:5000`.
+2. **Offline Resilience**:
+   - If the backend is unreachable or offline, the app seamlessly provides verified contest demo data without blocking the screen.
+3. **Manual Overrides**:
+   - Tap the **Settings icon** (top-right of header) to test connection, switch timezones, or manually configure server host URL.
 
 ---
 
@@ -82,22 +77,31 @@ The mobile app connects to the Express backend running in `../backend/`:
 native/
 ├── src/
 │   ├── components/
-│   │   ├── ApiBanner.jsx            # Offline / demo mode notification banner
+│   │   ├── ActiveFiltersRow.jsx     # Dismissible chips for active search/division filters
 │   │   ├── CalendarView.jsx         # Interactive monthly calendar matrix & day cells
-│   │   ├── ContestCard.jsx          # Contest card with live countdown & action buttons
+│   │   ├── ContestCard.jsx          # Streamlined contest card with live status & quick actions
 │   │   ├── ContestModal.jsx         # Deep-dive contest details modal bottom sheet
 │   │   ├── DayDetailModal.jsx       # Day inspector modal for scheduled rounds
-│   │   ├── FilterBar.jsx            # Search, view switcher, platform & division chips
-│   │   ├── Header.jsx               # Brand header, live pulse, timezone & server trigger
+│   │   ├── FilterModal.jsx          # Bottom sheet for status, divisions, and platforms
+│   │   ├── Header.jsx               # Minimalist header with brand, live badge & action triggers
 │   │   ├── ListView.jsx             # Categorized timeline (Live, Today, Tomorrow, etc.)
+│   │   ├── PlatformChips.jsx        # Single-row horizontal swipeable platform chips
 │   │   ├── PlatformIcons.jsx        # SVG logos for Codeforces, LeetCode, CodeChef, AtCoder
-│   │   ├── ServerConfigModal.jsx    # Backend URL configuration & connectivity tester
-│   │   ├── StatsRibbon.jsx          # Live metrics cards (Live, Upcoming, Platforms, Total)
-│   │   └── TimezoneModal.jsx        # Modal to switch between global timezones
+│   │   ├── SearchBar.jsx            # Expandable search bar
+│   │   ├── SettingsModal.jsx        # Consolidated settings (Timezone, API URL, Sync)
+│   │   ├── TelemetryTicker.jsx      # Micro-metrics telemetry row
+│   │   └── ViewSwitcher.jsx         # Segmented switch (Timeline vs Calendar)
 │   ├── constants/
 │   │   └── theme.js                 # Obsidian dark theme colors, spacing, and shadows
 │   ├── services/
-│   │   └── api.js                   # Headless API client with timeout & offline fallback
+│   │   └── api.js                   # Headless API client with auto-detection & offline fallback
+│   └── utils/
+│       ├── calendarSync.js          # Google Calendar, deep linking, sharing, and clipboard
+│       └── timeUtils.js             # Countdowns, formatters, matrix generator & timezone math
+├── App.js                           # Root component with central timer & filter coordinator
+├── app.json                         # Expo configuration (name, orientation, theme)
+└── package.json
+```
 │   └── utils/
 │       ├── calendarSync.js          # Google Calendar, deep linking, sharing, and clipboard
 │       └── timeUtils.js             # Countdowns, formatters, matrix generator & timezone math

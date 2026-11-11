@@ -23,7 +23,7 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isUsingFallback, setIsUsingFallback] = useState(false);
+  const [apiError, setApiError] = useState(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // Initial load
@@ -37,20 +37,25 @@ export default function App() {
         getContests()
       ]);
 
-      setPlatforms(platformResult.data);
-      setAllContests(contestResult.data);
+      if (!platformResult.success || !contestResult.success) {
+        const errorMsg = platformResult.error || contestResult.error || 'Backend API is unreachable';
+        setApiError(errorMsg);
+        setPlatforms([]);
+        setAllContests([]);
+      } else {
+        setApiError(null);
+        setPlatforms(platformResult.data || []);
+        setAllContests(contestResult.data || []);
 
-      // If either call fell back to hardcoded data, flag it
-      const fallback = platformResult.isFallback || contestResult.isFallback;
-      setIsUsingFallback(fallback);
-      if (!fallback) setBannerDismissed(false); // reset dismiss when API recovers
-
-      // Default select all platforms on first load
-      if (selectedPlatforms.length === 0 && platformResult.data.length > 0) {
-        setSelectedPlatforms(platformResult.data.map((p) => p.id));
+        if (selectedPlatforms.length === 0 && (platformResult.data || []).length > 0) {
+          setSelectedPlatforms(platformResult.data.map((p) => p.id));
+        }
       }
     } catch (err) {
-      console.error('Error loading initial data:', err);
+      console.error('Error loading contest data:', err);
+      setApiError(err.message || 'Failed to connect to backend server');
+      setPlatforms([]);
+      setAllContests([]);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -73,7 +78,6 @@ export default function App() {
   const handleTogglePlatform = (platformId) => {
     setSelectedPlatforms((prev) => {
       if (prev.includes(platformId)) {
-        // Don't allow deselecting all - if last one, keep it or allow toggle
         const next = prev.filter((id) => id !== platformId);
         return next.length > 0 ? next : [platformId];
       } else {
@@ -85,7 +89,6 @@ export default function App() {
   // Select all platforms
   const handleSelectAllPlatforms = () => {
     if (selectedPlatforms.length === platforms.length) {
-      // Toggle to primary 3 platforms
       setSelectedPlatforms(['codeforces', 'leetcode', 'codechef']);
     } else {
       setSelectedPlatforms(platforms.map((p) => p.id));
@@ -153,7 +156,7 @@ export default function App() {
         selectedDivisions.length > 0 &&
         !selectedDivisions.includes('All')
       ) {
-        const hasMatchingDivision = contest.divisions.some((d) => {
+        const hasMatchingDivision = contest.divisions?.some((d) => {
           const dClean = d.toLowerCase().replace(/[^a-z0-9]/g, '');
           return selectedDivisions.some((targetDiv) => {
             const targetClean = targetDiv.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -173,9 +176,9 @@ export default function App() {
       // 4. Search query
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase().trim();
-        const matchesTitle = contest.title.toLowerCase().includes(q);
-        const matchesPlatform = contest.platformName.toLowerCase().includes(q);
-        const matchesDivision = contest.divisions.some((d) =>
+        const matchesTitle = contest.title?.toLowerCase().includes(q);
+        const matchesPlatform = (contest.platformName || '').toLowerCase().includes(q);
+        const matchesDivision = contest.divisions?.some((d) =>
           d.toLowerCase().includes(q)
         );
         if (!matchesTitle && !matchesPlatform && !matchesDivision) {
@@ -200,19 +203,20 @@ export default function App() {
         selectedDivisions={selectedDivisions}
       />
 
-      {/* API Down Banner */}
-      {isUsingFallback && !bannerDismissed && (
-        <div className="api-down-banner">
+      {/* API Down Prompt Banner */}
+      {apiError && !bannerDismissed && (
+        <div className="api-down-banner" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
           <div className="api-down-banner-content">
-            <WifiOff size={16} className="api-down-icon" />
+            <WifiOff size={16} className="api-down-icon" style={{ color: '#ef4444' }} />
             <div className="api-down-text">
-              <strong>Backend API is unreachable</strong>
-              <span>Showing hardcoded demo data. Start the backend server to see live contests.</span>
+              <strong style={{ color: '#ef4444' }}>Backend API is unreachable</strong>
+              <span>Cannot connect to backend server. Start the backend with "npm run dev" to load contests.</span>
             </div>
             <button
               className="api-down-retry-btn"
               onClick={() => loadData(true)}
               disabled={isRefreshing}
+              style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }}
             >
               <RefreshCw size={13} className={isRefreshing ? 'spin-icon' : ''} />
               <span>Retry</span>
@@ -231,30 +235,6 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="container" style={{ flex: 1, paddingBottom: '60px', marginTop: '24px' }}>
-        {/* Analytics Stats Ribbon */}
-        <StatsRibbon
-          contests={filteredContests}
-          platforms={platforms}
-        />
-
-        {/* Filter Bar Hub */}
-        <FilterBar
-          platforms={platforms}
-          selectedPlatforms={selectedPlatforms}
-          onTogglePlatform={handleTogglePlatform}
-          onSelectAllPlatforms={handleSelectAllPlatforms}
-          selectedDivisions={selectedDivisions}
-          onToggleDivision={handleToggleDivision}
-          onSelectAllDivisions={handleSelectAllDivisions}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          contestCountsByPlatform={contestCountsByPlatform}
-        />
-
         {/* Loading Spinner */}
         {isLoading ? (
           <div
@@ -271,15 +251,109 @@ export default function App() {
             <div className="gentle-spinner" />
             <div>
               <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '1rem' }}>
-                Loading contest schedules...
+                Connecting to backend API...
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px' }}>
-                Fetching verified rounds from Codeforces, LeetCode, CodeChef, and AtCoder
+                Fetching verified contest schedules
               </p>
             </div>
           </div>
+        ) : apiError && allContests.length === 0 ? (
+          /* Backend API Down Prompt Card */
+          <div
+            className="rounded-card"
+            style={{
+              padding: '48px 24px',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+              maxWidth: '560px',
+              margin: '32px auto 0',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: 'rgba(239, 68, 68, 0.04)'
+            }}
+          >
+            <div
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <WifiOff size={28} color="#ef4444" />
+            </div>
+            <div>
+              <h2 style={{ color: 'var(--text-primary)', fontSize: '1.25rem', fontWeight: 700 }}>
+                Backend Server Unreachable
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '8px', lineHeight: 1.5 }}>
+                Could not connect to the contest radar backend server at <code style={{ color: '#ef4444' }}>http://localhost:5000/api</code>.
+                <br />
+                Please ensure the Express backend is running.
+              </p>
+            </div>
+            <div
+              style={{
+                background: 'rgba(0, 0, 0, 0.35)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '8px',
+                padding: '10px 16px',
+                fontFamily: 'monospace',
+                fontSize: '0.85rem',
+                color: '#3b82f6'
+              }}
+            >
+              cd backend &amp;&amp; npm run dev
+            </div>
+            <button
+              className="api-down-retry-btn"
+              onClick={() => loadData(true)}
+              disabled={isRefreshing}
+              style={{
+                marginTop: '8px',
+                padding: '8px 20px',
+                fontSize: '0.875rem',
+                background: '#3b82f6',
+                color: '#fff',
+                borderColor: 'transparent'
+              }}
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'spin-icon' : ''} />
+              <span>{isRefreshing ? 'Retrying...' : 'Retry Connection'}</span>
+            </button>
+          </div>
         ) : (
           <>
+            {/* Analytics Stats Ribbon */}
+            <StatsRibbon
+              contests={filteredContests}
+              platforms={platforms}
+            />
+
+            {/* Filter Bar Hub */}
+            <FilterBar
+              platforms={platforms}
+              selectedPlatforms={selectedPlatforms}
+              onTogglePlatform={handleTogglePlatform}
+              onSelectAllPlatforms={handleSelectAllPlatforms}
+              selectedDivisions={selectedDivisions}
+              onToggleDivision={handleToggleDivision}
+              onSelectAllDivisions={handleSelectAllDivisions}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              contestCountsByPlatform={contestCountsByPlatform}
+            />
+
             {/* View Mode Switching */}
             {viewMode === 'list' ? (
               <ListView

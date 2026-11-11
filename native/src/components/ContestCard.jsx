@@ -1,53 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 import { formatDateTime, formatDuration, getCountdown } from '../utils/timeUtils';
 import { openContestArena, openGoogleCalendar, shareContest } from '../utils/calendarSync';
 import { PlatformIcon } from './PlatformIcons';
 
-export function ContestCard({ contest, timezone, onSelectContest }) {
-  const [nowMs, setNowMs] = useState(Date.now());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNowMs(Date.now());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+export function ContestCard({
+  contest,
+  timezone,
+  onSelectContest,
+  nowMs
+}) {
+  const isLive = contest.status === 'LIVE';
 
   const countdown = getCountdown(
     contest.startTimeMs,
     contest.status,
-    nowMs,
+    nowMs || Date.now(),
     contest.startTimeMs,
     contest.endTimeMs
   );
 
-  const isLive = contest.status === 'LIVE';
+  const brandColor = contest.platformColor || COLORS.accentBlue;
 
   return (
     <TouchableOpacity
-      style={[styles.card, isLive && styles.cardLive]}
+      style={[
+        styles.card,
+        { borderLeftColor: brandColor },
+        isLive && styles.cardLive
+      ]}
       onPress={() => onSelectContest(contest)}
-      activeOpacity={0.85}
+      activeOpacity={0.8}
     >
-      {/* Top Header Row */}
-      <View style={styles.headerRow}>
-        <View style={styles.platformBadge}>
-          <PlatformIcon platform={contest.platform} size={15} />
-          <Text style={styles.platformName}>{contest.platformName}</Text>
+      {/* Top Meta Line: Platform + Division + Timer Badge */}
+      <View style={styles.topRow}>
+        <View style={styles.platformMeta}>
+          <PlatformIcon platform={contest.platform} size={14} />
+          <Text style={[styles.platformName, { color: brandColor }]}>
+            {contest.platformName}
+          </Text>
+          {contest.divisions?.[0] && (
+            <View style={styles.divisionPill}>
+              <Text style={styles.divisionText}>{contest.divisions[0]}</Text>
+            </View>
+          )}
         </View>
 
         {isLive ? (
           <View style={styles.liveBadge}>
-            <View style={styles.livePulseDot} />
-            <Text style={styles.liveBadgeText}>LIVE NOW</Text>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>LIVE</Text>
           </View>
         ) : (
           <View style={styles.countdownBadge}>
-            <Feather name="clock" size={11} color={COLORS.accentBlue} />
-            <Text style={styles.countdownText}>{countdown.label}</Text>
+            <Text style={styles.countdownText}>
+              {countdown.label.replace(/^Starts in /i, 'in ')}
+            </Text>
           </View>
         )}
       </View>
@@ -57,38 +67,12 @@ export function ContestCard({ contest, timezone, onSelectContest }) {
         {contest.title}
       </Text>
 
-      {/* Division Chips */}
-      <View style={styles.divisionsRow}>
-        {contest.divisions?.map((div, i) => (
-          <View key={i} style={styles.divTag}>
-            <Text style={styles.divTagText}>{div}</Text>
-          </View>
-        ))}
-        {contest.type && (
-          <View style={[styles.divTag, styles.divTagType]}>
-            <Text style={[styles.divTagText, styles.divTagTypeText]}>{contest.type}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Schedule & Duration Meta */}
-      <View style={styles.metaRow}>
-        <View style={styles.metaItem}>
-          <Ionicons name="calendar-outline" size={13} color={COLORS.textMuted} />
-          <Text style={styles.metaText}>{formatDateTime(contest.startTimeMs, timezone)}</Text>
-        </View>
-        <View style={styles.metaItem}>
-          <Feather name="clock" size={12} color={COLORS.textMuted} />
-          <Text style={styles.metaText}>{formatDuration(contest.durationSeconds)}</Text>
-        </View>
-      </View>
-
       {/* Live Contest Progress Bar */}
       {isLive && (
-        <View style={styles.progressBox}>
-          <View style={styles.progressLabelRow}>
-            <Text style={styles.progressLabelText}>{countdown.label} left</Text>
-            <Text style={styles.progressPercentText}>{Math.round(countdown.progress)}%</Text>
+        <View style={styles.liveProgressWrap}>
+          <View style={styles.liveProgressLabels}>
+            <Text style={styles.liveProgressTime}>{countdown.label}</Text>
+            <Text style={styles.liveProgressPercent}>{Math.round(countdown.progress)}%</Text>
           </View>
           <View style={styles.progressTrack}>
             <View
@@ -101,33 +85,46 @@ export function ContestCard({ contest, timezone, onSelectContest }) {
         </View>
       )}
 
-      {/* Action Footer Buttons */}
-      <View style={styles.actionsFooter}>
-        <TouchableOpacity
-          style={styles.arenaBtn}
-          onPress={() => openContestArena(contest.url)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.arenaBtnText}>Open Arena</Text>
-          <Feather name="external-link" size={13} color="#fff" />
-        </TouchableOpacity>
+      {/* Bottom Row: Date/Time + Quick Actions */}
+      <View style={styles.bottomRow}>
+        <View style={styles.scheduleInfo}>
+          <Text style={styles.scheduleText} numberOfLines={1}>
+            {formatDateTime(contest.startTimeMs, timezone)} · {formatDuration(contest.durationSeconds)}
+          </Text>
+        </View>
 
-        <View style={styles.secondaryActions}>
+        <View style={styles.quickActions}>
           <TouchableOpacity
-            style={styles.iconActionBtn}
-            onPress={() => openGoogleCalendar(contest)}
+            style={styles.quickActionBtn}
+            onPress={(e) => {
+              openGoogleCalendar(contest);
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             activeOpacity={0.7}
           >
-            <Ionicons name="calendar-sharp" size={14} color={COLORS.textSecondary} />
-            <Text style={styles.iconActionText}>GCal</Text>
+            <Ionicons name="calendar-outline" size={14} color={COLORS.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.iconActionBtn}
-            onPress={() => shareContest(contest)}
+            style={styles.quickActionBtn}
+            onPress={(e) => {
+              shareContest(contest);
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             activeOpacity={0.7}
           >
-            <Feather name="share-2" size={13} color={COLORS.textSecondary} />
+            <Feather name="share-2" size={13} color={COLORS.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.arenaPill, { backgroundColor: brandColor }]}
+            onPress={(e) => {
+              openContestArena(contest.url);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.arenaText}>Arena</Text>
+            <Feather name="arrow-up-right" size={12} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -140,62 +137,69 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgCard,
     borderWidth: 1,
     borderColor: COLORS.borderSubtle,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12
+    borderLeftWidth: 3.5,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 8
   },
   cardLive: {
-    borderColor: 'rgba(239, 68, 68, 0.4)',
-    backgroundColor: 'rgba(239, 68, 68, 0.05)'
+    borderColor: 'rgba(239, 68, 68, 0.35)',
+    backgroundColor: 'rgba(239, 68, 68, 0.04)'
   },
-  headerRow: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8
+    marginBottom: 6
   },
-  platformBadge: {
+  platformMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6
   },
   platformName: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700'
+  },
+  divisionPill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4
+  },
+  divisionText: {
+    color: COLORS.textMuted,
+    fontSize: 9,
+    fontWeight: '600'
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: COLORS.badgeLiveBg,
     borderColor: COLORS.badgeLiveBorder,
     borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8
   },
-  livePulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: COLORS.accentRed
   },
-  liveBadgeText: {
+  liveText: {
     color: COLORS.accentRed,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800'
   },
   countdownBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: COLORS.badgeUpcomingBg,
-    borderColor: COLORS.badgeUpcomingBorder,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12
+    backgroundColor: 'rgba(59, 130, 246, 0.08)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8
   },
   countdownText: {
     color: COLORS.accentBlue,
@@ -204,122 +208,81 @@ const styles = StyleSheet.create({
   },
   title: {
     color: COLORS.textPrimary,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    lineHeight: 20,
+    lineHeight: 19,
     marginBottom: 8
   },
-  divisionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 10
-  },
-  divTag: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+  liveProgressWrap: {
+    marginBottom: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    padding: 6,
     borderRadius: 6
   },
-  divTagText: {
-    color: COLORS.textSecondary,
-    fontSize: 10,
-    fontWeight: '600'
-  },
-  divTagType: {
-    backgroundColor: 'rgba(99, 102, 241, 0.15)'
-  },
-  divTagTypeText: {
-    color: '#a5b4fc'
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginBottom: 10
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4
-  },
-  metaText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '500'
-  },
-  progressBox: {
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 12
-  },
-  progressLabelRow: {
+  liveProgressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4
+    marginBottom: 3
   },
-  progressLabelText: {
+  liveProgressTime: {
     color: COLORS.accentRed,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700'
   },
-  progressPercentText: {
+  liveProgressPercent: {
     color: COLORS.textMuted,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700'
   },
   progressTrack: {
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 2,
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 1.5,
     overflow: 'hidden'
   },
   progressBar: {
     height: '100%',
-    backgroundColor: COLORS.accentRed,
-    borderRadius: 2
+    backgroundColor: COLORS.accentRed
   },
-  actionsFooter: {
+  bottomRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderSubtle
-  },
-  arenaBtn: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: COLORS.accentBlue,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8
+    paddingTop: 4
   },
-  arenaBtnText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700'
+  scheduleInfo: {
+    flex: 1,
+    marginRight: 8
   },
-  secondaryActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6
-  },
-  iconActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8
-  },
-  iconActionText: {
-    color: COLORS.textSecondary,
+  scheduleText: {
+    color: COLORS.textMuted,
     fontSize: 11,
-    fontWeight: '600'
+    fontWeight: '500'
+  },
+  quickActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  quickActionBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  arenaPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6
+  },
+  arenaText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '800'
   }
 });
-

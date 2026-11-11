@@ -5,23 +5,28 @@ import {
   ScrollView,
   RefreshControl,
   ActivityIndicator,
-  Text
+  Text,
+  TouchableOpacity
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
 import { Header } from './src/components/Header';
-import { ApiBanner } from './src/components/ApiBanner';
-import { StatsRibbon } from './src/components/StatsRibbon';
-import { FilterBar } from './src/components/FilterBar';
+import { SearchBar } from './src/components/SearchBar';
+import { ViewSwitcher } from './src/components/ViewSwitcher';
+import { PlatformChips } from './src/components/PlatformChips';
+import { ActiveFiltersRow } from './src/components/ActiveFiltersRow';
+import { TelemetryTicker } from './src/components/TelemetryTicker';
 import { ListView } from './src/components/ListView';
 import { CalendarView } from './src/components/CalendarView';
+
 import { ContestModal } from './src/components/ContestModal';
 import { DayDetailModal } from './src/components/DayDetailModal';
-import { TimezoneModal } from './src/components/TimezoneModal';
-import { ServerConfigModal } from './src/components/ServerConfigModal';
+import { FilterModal } from './src/components/FilterModal';
+import { SettingsModal } from './src/components/SettingsModal';
 
-import { getPlatforms, getContests } from './src/services/api';
+import { getPlatforms, getContests, getApiBaseUrl } from './src/services/api';
 import { COLORS } from './src/constants/theme';
 
 export default function App() {
@@ -34,15 +39,24 @@ export default function App() {
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
   const [timezone, setTimezone] = useState('local');
 
+  // UI state
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [selectedContest, setSelectedContest] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [timezoneModalVisible, setTimezoneModalVisible] = useState(false);
-  const [serverModalVisible, setServerModalVisible] = useState(false);
 
+  // Loading & status
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isUsingFallback, setIsUsingFallback] = useState(false);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [apiError, setApiError] = useState(null);
+
+  // Centralized 1-second ticker for all live countdowns (prevents multiple intervals)
+  const [nowMs, setNowMs] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Initial load
   const loadData = useCallback(async (isRefresh = false) => {
@@ -55,19 +69,26 @@ export default function App() {
         getContests()
       ]);
 
-      setPlatforms(platformResult.data);
-      setAllContests(contestResult.data);
+      if (!platformResult.success || !contestResult.success) {
+        const errorMsg = platformResult.error || contestResult.error || 'Backend API is unreachable';
+        setApiError(errorMsg);
+        setPlatforms([]);
+        setAllContests([]);
+      } else {
+        setApiError(null);
+        setPlatforms(platformResult.data || []);
+        setAllContests(contestResult.data || []);
 
-      const fallback = platformResult.isFallback || contestResult.isFallback;
-      setIsUsingFallback(fallback);
-      if (!fallback) setBannerDismissed(false);
-
-      // Default select all platforms on first load
-      if (selectedPlatforms.length === 0 && platformResult.data.length > 0) {
-        setSelectedPlatforms(platformResult.data.map((p) => p.id));
+        // Default select all platforms on first load
+        if (selectedPlatforms.length === 0 && (platformResult.data || []).length > 0) {
+          setSelectedPlatforms(platformResult.data.map((p) => p.id));
+        }
       }
     } catch (err) {
       console.error('Error loading contest data:', err);
+      setApiError(err.message || 'Failed to connect to backend server');
+      setPlatforms([]);
+      setAllContests([]);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -125,17 +146,23 @@ export default function App() {
     });
   };
 
-  // Reset divisions to 'All'
   const handleSelectAllDivisions = () => {
     setSelectedDivisions(['All']);
   };
 
-  // Reset all filters
-  const handleResetFilters = () => {
+  const handleRemoveDivision = (division) => {
+    setSelectedDivisions((prev) => {
+      const next = prev.filter((d) => d !== division);
+      return next.length > 0 ? next : ['All'];
+    });
+  };
+
+  const handleResetAllFilters = () => {
     setSelectedPlatforms(platforms.map((p) => p.id));
     setSelectedDivisions(['All']);
     setSearchQuery('');
     setStatusFilter('all');
+    setIsSearchVisible(false);
   };
 
   // Calculate live count
@@ -188,7 +215,7 @@ export default function App() {
       // 4. Search query
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase().trim();
-        const matchesTitle = contest.title.toLowerCase().includes(q);
+        const matchesTitle = contest.title?.toLowerCase().includes(q);
         const matchesPlatform = (contest.platformName || '').toLowerCase().includes(q);
         const matchesDivision = contest.divisions?.some((d) =>
           d.toLowerCase().includes(q)
@@ -202,33 +229,80 @@ export default function App() {
     });
   }, [allContests, selectedPlatforms, selectedDivisions, statusFilter, searchQuery]);
 
+  // Active filter badge count
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (statusFilter !== 'all') count++;
+    if (selectedDivisions.length > 0 && !selectedDivisions.includes('All')) {
+      count += selectedDivisions.length;
+    }
+    if (selectedPlatforms.length > 0 && selectedPlatforms.length < platforms.length) {
+      count++;
+    }
+    return count;
+  }, [statusFilter, selectedDivisions, selectedPlatforms, platforms]);
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <StatusBar style="light" backgroundColor={COLORS.bgPrimary} />
 
-        {/* Top App Header */}
+        {/* 1. Header (Brand, live badge, search toggle, filter trigger, settings trigger) */}
         <Header
           liveCount={liveCount}
-          timezone={timezone}
-          onOpenTimezoneModal={() => setTimezoneModalVisible(true)}
-          onRefresh={() => loadData(true)}
-          isRefreshing={isRefreshing}
-          onOpenServerModal={() => setServerModalVisible(true)}
-          isUsingFallback={isUsingFallback}
+          isSearchVisible={isSearchVisible}
+          onToggleSearch={() => {
+            if (isSearchVisible) setSearchQuery('');
+            setIsSearchVisible(!isSearchVisible);
+          }}
+          onOpenFilterModal={() => setIsFilterModalOpen(true)}
+          activeFilterCount={activeFilterCount}
+          onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+          hasApiError={Boolean(apiError)}
         />
 
-        {/* Fallback demo mode alert banner */}
-        {isUsingFallback && !bannerDismissed && (
-          <ApiBanner
-            onRetry={() => loadData(true)}
-            onConfigure={() => setServerModalVisible(true)}
-            onDismiss={() => setBannerDismissed(true)}
-            isRefreshing={isRefreshing}
+        {/* 2. Expandable Search Bar */}
+        <SearchBar
+          visible={isSearchVisible}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClose={() => {
+            setSearchQuery('');
+            setIsSearchVisible(false);
+          }}
+        />
+
+        {/* 3. Sleek View Switcher (Timeline | Calendar) */}
+        <ViewSwitcher viewMode={viewMode} onViewModeChange={setViewMode} />
+
+        {/* 4. Single-Row Platform Chips */}
+        {platforms.length > 0 && (
+          <PlatformChips
+            platforms={platforms}
+            selectedPlatforms={selectedPlatforms}
+            onTogglePlatform={handleTogglePlatform}
+            onSelectAllPlatforms={handleSelectAllPlatforms}
+            contestCountsByPlatform={contestCountsByPlatform}
           />
         )}
 
-        {/* Main scrollable body */}
+        {/* 5. Active Filters Row (only renders when filters exist) */}
+        <ActiveFiltersRow
+          statusFilter={statusFilter}
+          onResetStatus={() => setStatusFilter('all')}
+          selectedDivisions={selectedDivisions}
+          onRemoveDivision={handleRemoveDivision}
+          searchQuery={searchQuery}
+          onClearSearch={() => setSearchQuery('')}
+          onResetAll={handleResetAllFilters}
+        />
+
+        {/* 6. Minimal Telemetry Ticker (only when loaded) */}
+        {!apiError && (
+          <TelemetryTicker contests={filteredContests} platforms={platforms} />
+        )}
+
+        {/* 7. Main Scrollable Content */}
         <ScrollView
           style={styles.mainScroll}
           contentContainerStyle={styles.mainScrollContent}
@@ -242,45 +316,59 @@ export default function App() {
             />
           }
         >
-          {/* Analytics Stats Ribbon */}
-          <StatsRibbon
-            contests={filteredContests}
-            platforms={platforms}
-          />
-
-          {/* Filter Bar */}
-          <FilterBar
-            platforms={platforms}
-            selectedPlatforms={selectedPlatforms}
-            onTogglePlatform={handleTogglePlatform}
-            onSelectAllPlatforms={handleSelectAllPlatforms}
-            selectedDivisions={selectedDivisions}
-            onToggleDivision={handleToggleDivision}
-            onSelectAllDivisions={handleSelectAllDivisions}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            contestCountsByPlatform={contestCountsByPlatform}
-          />
-
-          {/* Loading Indicator or Views */}
           {isLoading ? (
             <View style={styles.loadingBox}>
               <ActivityIndicator size="large" color={COLORS.accentBlue} />
-              <Text style={styles.loadingTitle}>Loading CP Radar Schedules...</Text>
+              <Text style={styles.loadingTitle}>Connecting to Radar Feeds...</Text>
               <Text style={styles.loadingSubtitle}>
-                Syncing verified rounds from Codeforces, LeetCode, CodeChef, and AtCoder
+                Aggregating Codeforces, LeetCode, CodeChef, and AtCoder
               </Text>
+            </View>
+          ) : apiError && allContests.length === 0 ? (
+            /* Backend API Down Prompt Card */
+            <View style={styles.errorCard}>
+              <View style={styles.errorIconBox}>
+                <Feather name="wifi-off" size={28} color={COLORS.accentRed} />
+              </View>
+              <Text style={styles.errorTitle}>Backend Server Unreachable</Text>
+              <Text style={styles.errorDesc}>
+                Could not connect to backend at{'\n'}
+                <Text style={styles.errorUrl}>{getApiBaseUrl()}</Text>
+                {'\n'}Please start the backend server to load live contests.
+              </Text>
+              <View style={styles.terminalBox}>
+                <Text style={styles.terminalText}>cd backend && npm run dev</Text>
+              </View>
+              <View style={styles.errorActionsRow}>
+                <TouchableOpacity
+                  style={styles.retryBtn}
+                  onPress={() => loadData(true)}
+                  disabled={isRefreshing}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="refresh-cw" size={13} color="#fff" />
+                  <Text style={styles.retryBtnText}>
+                    {isRefreshing ? 'Retrying...' : 'Retry Connection'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.configBtn}
+                  onPress={() => setIsSettingsModalOpen(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="settings-outline" size={13} color={COLORS.textPrimary} />
+                  <Text style={styles.configBtnText}>Server IP</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ) : viewMode === 'list' ? (
             <ListView
               contests={filteredContests}
               timezone={timezone}
               onSelectContest={setSelectedContest}
-              onResetFilters={handleResetFilters}
+              onResetFilters={handleResetAllFilters}
+              nowMs={nowMs}
             />
           ) : (
             <CalendarView
@@ -292,14 +380,14 @@ export default function App() {
           )}
         </ScrollView>
 
-        {/* Contest Details Modal */}
+        {/* Deep Contest Details Modal */}
         <ContestModal
           contest={selectedContest}
           timezone={timezone}
           onClose={() => setSelectedContest(null)}
         />
 
-        {/* Day Inspection Modal */}
+        {/* Calendar Day Inspection Drawer */}
         <DayDetailModal
           dayData={selectedDay}
           timezone={timezone}
@@ -310,19 +398,32 @@ export default function App() {
           }}
         />
 
-        {/* Timezone Selector Modal */}
-        <TimezoneModal
-          visible={timezoneModalVisible}
-          currentTimezone={timezone}
-          onSelectTimezone={setTimezone}
-          onClose={() => setTimezoneModalVisible(false)}
+        {/* Filter Bottom Sheet Modal */}
+        <FilterModal
+          visible={isFilterModalOpen}
+          onClose={() => setIsFilterModalOpen(false)}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          platforms={platforms}
+          selectedPlatforms={selectedPlatforms}
+          onTogglePlatform={handleTogglePlatform}
+          onSelectAllPlatforms={handleSelectAllPlatforms}
+          selectedDivisions={selectedDivisions}
+          onToggleDivision={handleToggleDivision}
+          onSelectAllDivisions={handleSelectAllDivisions}
+          onResetAllFilters={handleResetAllFilters}
+          resultCount={filteredContests.length}
         />
 
-        {/* Backend API Settings Modal */}
-        <ServerConfigModal
-          visible={serverModalVisible}
-          onClose={() => setServerModalVisible(false)}
-          onServerSaved={() => loadData(true)}
+        {/* Settings & Timezone Modal */}
+        <SettingsModal
+          visible={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          currentTimezone={timezone}
+          onSelectTimezone={setTimezone}
+          onRefresh={() => loadData(true)}
+          isRefreshing={isRefreshing}
+          hasApiError={Boolean(apiError)}
         />
       </SafeAreaView>
     </SafeAreaProvider>
@@ -339,14 +440,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgPrimary
   },
   mainScrollContent: {
-    paddingBottom: 40
+    paddingBottom: 32
   },
   loadingBox: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 48,
     marginHorizontal: 16,
-    marginTop: 20,
+    marginTop: 24,
     backgroundColor: COLORS.bgCard,
     borderWidth: 1,
     borderColor: COLORS.borderSubtle,
@@ -354,15 +455,101 @@ const styles = StyleSheet.create({
   },
   loadingTitle: {
     color: COLORS.textPrimary,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    marginTop: 14
+    marginTop: 12
   },
   loadingSubtitle: {
     color: COLORS.textMuted,
     fontSize: 11,
     textAlign: 'center',
-    marginTop: 6,
-    lineHeight: 16
+    marginTop: 4
+  },
+  errorCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 28,
+    marginHorizontal: 16,
+    marginTop: 24,
+    backgroundColor: 'rgba(239, 68, 68, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+    borderRadius: 16
+  },
+  errorIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12
+  },
+  errorTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 6
+  },
+  errorDesc: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 12
+  },
+  errorUrl: {
+    color: COLORS.accentRed,
+    fontWeight: '700'
+  },
+  terminalBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 1,
+    borderColor: COLORS.borderSubtle,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 16
+  },
+  terminalText: {
+    color: COLORS.accentBlue,
+    fontSize: 11,
+    fontFamily: 'monospace',
+    fontWeight: '600'
+  },
+  errorActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.accentBlue,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 8
+  },
+  retryBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700'
+  },
+  configBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: COLORS.bgCard,
+    borderWidth: 1,
+    borderColor: COLORS.borderSubtle,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 8
+  },
+  configBtnText: {
+    color: COLORS.textPrimary,
+    fontSize: 12,
+    fontWeight: '600'
   }
 });
