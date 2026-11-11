@@ -1,16 +1,38 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
-import { StatsRibbon } from './components/StatsRibbon';
+import { HeroSection } from './components/HeroSection';
 import { FilterBar } from './components/FilterBar';
 import { ListView } from './components/ListView';
 import { CalendarView } from './components/CalendarView';
 import { ContestModal } from './components/ContestModal';
 import { DayDetailModal } from './components/DayDetailModal';
-import { getPlatforms, getContests } from './services/api';
-import { WifiOff, RefreshCw, X } from 'lucide-react';
+import { SettingsModal } from './components/SettingsModal';
+import { getPlatforms, getContests, API_BASE } from './services/api';
+import { useTheme } from './utils/theme';
+import { WifiOff, RefreshCw, X, Sparkles } from 'lucide-react';
 import './styles/components.css';
 
+export function AppSkeleton() {
+  return (
+    <div className="container" style={{ marginTop: '22px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Slight Hero Skeleton */}
+      <div className="skeleton-box" style={{ height: '148px', borderRadius: '24px' }} />
+
+      {/* Filter Bar Skeleton */}
+      <div className="skeleton-box" style={{ height: '96px', borderRadius: '18px' }} />
+
+      {/* Cards Grid Skeleton */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="skeleton-box" style={{ height: '170px', borderRadius: '14px' }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const { theme, setTheme } = useTheme();
   const [platforms, setPlatforms] = useState([]);
   const [allContests, setAllContests] = useState([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
@@ -21,6 +43,7 @@ export default function App() {
   const [timezone, setTimezone] = useState('local');
   const [selectedContest, setSelectedContest] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -73,6 +96,12 @@ export default function App() {
     }, 180000);
     return () => clearInterval(interval);
   }, [loadData]);
+
+  // Theme toggle helper (switches between light and dark)
+  const handleThemeToggle = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+  };
 
   // Toggle single platform
   const handleTogglePlatform = (platformId) => {
@@ -201,16 +230,21 @@ export default function App() {
         isRefreshing={isRefreshing}
         selectedPlatforms={selectedPlatforms}
         selectedDivisions={selectedDivisions}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        theme={theme}
+        onThemeToggle={handleThemeToggle}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
 
       {/* API Down Prompt Banner */}
       {apiError && !bannerDismissed && (
-        <div className="api-down-banner" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+        <div className="api-down-banner">
           <div className="api-down-banner-content">
-            <WifiOff size={16} className="api-down-icon" style={{ color: '#ef4444' }} />
+            <WifiOff size={16} style={{ color: '#ef4444' }} />
             <div className="api-down-text">
-              <strong style={{ color: '#ef4444' }}>Backend API is unreachable</strong>
-              <span>Cannot connect to backend server. Start the backend with "npm run dev" to load contests.</span>
+              <strong style={{ color: '#ef4444' }}>Live radar server unreachable</strong>
+              <span>Could not connect to {API_BASE}. Start the server or check connection.</span>
             </div>
             <button
               className="api-down-retry-btn"
@@ -218,7 +252,7 @@ export default function App() {
               disabled={isRefreshing}
               style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }}
             >
-              <RefreshCw size={13} className={isRefreshing ? 'spin-icon' : ''} />
+              <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
               <span>Retry</span>
             </button>
             <button
@@ -234,109 +268,45 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="container" style={{ flex: 1, paddingBottom: '60px', marginTop: '24px' }}>
-        {/* Loading Spinner */}
+      <main className="container" style={{ flex: 1, paddingBottom: '60px', marginTop: '28px' }}>
+        {/* Shimmer Skeleton Loader */}
         {isLoading ? (
-          <div
-            className="rounded-card"
-            style={{
-              padding: '64px 24px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px'
-            }}
-          >
-            <div className="gentle-spinner" />
-            <div>
-              <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '1rem' }}>
-                Connecting to backend API...
-              </p>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px' }}>
-                Fetching verified contest schedules
-              </p>
-            </div>
-          </div>
+          <AppSkeleton />
         ) : apiError && allContests.length === 0 ? (
-          /* Backend API Down Prompt Card */
-          <div
-            className="rounded-card"
-            style={{
-              padding: '48px 24px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px',
-              maxWidth: '560px',
-              margin: '32px auto 0',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              background: 'rgba(239, 68, 68, 0.04)'
-            }}
-          >
+          /* Backend API Down Card */
+          <div className="empty-state-card" style={{ border: '1px solid rgba(239, 68, 68, 0.28)' }}>
             <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                background: 'rgba(239, 68, 68, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              className="empty-state-icon-box"
+              style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.25)' }}
             >
-              <WifiOff size={28} color="#ef4444" />
+              <WifiOff size={28} />
             </div>
-            <div>
-              <h2 style={{ color: 'var(--text-primary)', fontSize: '1.25rem', fontWeight: 700 }}>
-                Backend Server Unreachable
-              </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '8px', lineHeight: 1.5 }}>
-                Could not connect to the contest radar backend server at <code style={{ color: '#ef4444' }}>https://contendar.onrender.com/api</code>.
-                <br />
-                Please check your network connection or verify that the backend is active.
-              </p>
-            </div>
-            <div
-              style={{
-                background: 'rgba(0, 0, 0, 0.35)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '8px',
-                padding: '10px 16px',
-                fontFamily: 'monospace',
-                fontSize: '0.85rem',
-                color: '#3b82f6'
-              }}
-            >
-              cd backend &amp;&amp; npm run dev
-            </div>
+            <h2 className="empty-state-title">Backend Radar Offline</h2>
+            <p className="empty-state-desc">
+              Unable to reach the live contest radar endpoint at <code style={{ color: '#ef4444' }}>{API_BASE}</code>.
+            </p>
             <button
-              className="api-down-retry-btn"
+              className="primary-apple-btn"
               onClick={() => loadData(true)}
               disabled={isRefreshing}
-              style={{
-                marginTop: '8px',
-                padding: '8px 20px',
-                fontSize: '0.875rem',
-                background: '#3b82f6',
-                color: '#fff',
-                borderColor: 'transparent'
-              }}
+              style={{ background: '#ef4444' }}
             >
-              <RefreshCw size={14} className={isRefreshing ? 'spin-icon' : ''} />
-              <span>{isRefreshing ? 'Retrying...' : 'Retry Connection'}</span>
+              <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+              <span>{isRefreshing ? 'Connecting...' : 'Retry Connection'}</span>
             </button>
           </div>
         ) : (
           <>
-            {/* Analytics Stats Ribbon */}
-            <StatsRibbon
-              contests={filteredContests}
+            {/* Editorial Dashboard Hero Header */}
+            <HeroSection
+              contests={allContests}
               platforms={platforms}
+              timezone={timezone}
+              onSelectContest={setSelectedContest}
+              onOpenSettings={() => setSettingsOpen(true)}
             />
 
-            {/* Filter Bar Hub */}
+            {/* Filter Command Panel */}
             <FilterBar
               platforms={platforms}
               selectedPlatforms={selectedPlatforms}
@@ -352,6 +322,7 @@ export default function App() {
               statusFilter={statusFilter}
               onStatusFilterChange={setStatusFilter}
               contestCountsByPlatform={contestCountsByPlatform}
+              totalResultsCount={filteredContests.length}
             />
 
             {/* View Mode Switching */}
@@ -395,6 +366,20 @@ export default function App() {
           }}
         />
       )}
+
+      {/* Apple Settings Modal */}
+      <SettingsModal
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        theme={theme}
+        onThemeChange={setTheme}
+        timezone={timezone}
+        onTimezoneChange={setTimezone}
+        platforms={platforms}
+        selectedPlatforms={selectedPlatforms}
+        onTogglePlatform={handleTogglePlatform}
+        onSelectAllPlatforms={handleSelectAllPlatforms}
+      />
     </div>
   );
 }

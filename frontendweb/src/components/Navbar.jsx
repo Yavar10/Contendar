@@ -1,5 +1,17 @@
 import React from 'react';
-import { Calendar, Globe, Download, RefreshCw } from 'lucide-react';
+import {
+  Calendar,
+  Globe,
+  Download,
+  RefreshCw,
+  Sun,
+  Moon,
+  Settings,
+  List,
+  Calendar as CalendarIcon,
+  Radio,
+  Zap
+} from 'lucide-react';
 import { TIMEZONES } from '../utils/timeUtils';
 import { downloadFilteredCalendar } from '../utils/calendarSync';
 
@@ -10,43 +22,70 @@ export function Navbar({
   onRefresh,
   isRefreshing,
   selectedPlatforms,
-  selectedDivisions
+  selectedDivisions,
+  viewMode,
+  onViewModeChange,
+  theme,
+  onThemeToggle,
+  onOpenSettings
 }) {
   const handleExportAll = () => {
     downloadFilteredCalendar(selectedPlatforms, selectedDivisions);
   };
 
+  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
   return (
     <header className="site-header">
       <div className="container header-container">
-        {/* Brand */}
-        <div className="brand-lockup">
+        {/* Brand Lockup */}
+        <div className="brand-lockup" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <div className="brand-symbol">
-            <Calendar size={18} strokeWidth={2.2} />
+            <Zap size={16} strokeWidth={2.4} fill="currentColor" />
           </div>
           <div className="brand-text">
             <span className="brand-name">Contendar</span>
-            <span className="brand-meta">Contest Radar</span>
+            <span className="brand-meta">Chrono Radar</span>
           </div>
+        </div>
+
+        {/* View Mode Segmented Switcher (Center / Apple style) */}
+        <div className="header-view-segmented">
+          <button
+            className={`header-segment-btn ${viewMode === 'list' ? 'is-active' : ''}`}
+            onClick={() => onViewModeChange('list')}
+            title="List View"
+          >
+            <List size={14} />
+            <span>List</span>
+          </button>
+          <button
+            className={`header-segment-btn ${viewMode === 'calendar' ? 'is-active' : ''}`}
+            onClick={() => onViewModeChange('calendar')}
+            title="Calendar View"
+          >
+            <CalendarIcon size={14} />
+            <span>Calendar</span>
+          </button>
         </div>
 
         {/* Header Right Actions */}
         <div className="header-actions">
-          {/* Live indicator if contests are active */}
+          {/* Live Status Indicator */}
           {liveCount > 0 ? (
             <div className="live-status-pill" title={`${liveCount} active contest(s) happening right now`}>
               <span className="live-pulse-dot" />
-              <span className="live-status-text">{liveCount} live now</span>
+              <span className="live-status-text">{liveCount} live</span>
             </div>
           ) : (
-            <div className="idle-status-pill">
+            <div className="idle-status-pill hide-mobile">
               <span className="idle-dot" />
-              <span>All feeds synced</span>
+              <span>Synced</span>
             </div>
           )}
 
-          {/* Timezone picker */}
-          <div className="timezone-control">
+          {/* Timezone Dropdown */}
+          <div className="timezone-control hide-mobile">
             <Globe size={13} className="timezone-icon" />
             <select
               aria-label="Select Timezone"
@@ -62,17 +101,37 @@ export function Navbar({
             </select>
           </div>
 
-          {/* Calendar export button */}
+          {/* Sync .ics Button */}
           <button
-            className="action-btn export-btn"
+            className="action-btn export-btn hide-mobile"
             onClick={handleExportAll}
-            title="Export filtered contests to .ics calendar"
+            title="Export filtered contests to iCalendar (.ics)"
           >
             <Download size={14} />
-            <span className="hide-mobile">Sync .ics</span>
+            <span>Sync .ics</span>
           </button>
 
-          {/* Refresh button */}
+          {/* Theme Switcher Toggle */}
+          <button
+            className="icon-btn theme-toggle-btn"
+            onClick={onThemeToggle}
+            title={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
+            aria-label="Toggle theme appearance"
+          >
+            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+
+          {/* Settings Trigger */}
+          <button
+            className="icon-btn settings-btn"
+            onClick={onOpenSettings}
+            title="Preferences & Settings"
+            aria-label="Preferences and settings"
+          >
+            <Settings size={15} />
+          </button>
+
+          {/* Refresh Feed */}
           <button
             className="icon-btn refresh-btn"
             onClick={onRefresh}

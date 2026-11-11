@@ -282,6 +282,7 @@ export function generateMonthCalendar(year, month) {
     const date = new Date(year, month - 1, dayNum);
     days.push({
       date,
+      day: dayNum,
       dayNumber: dayNum,
       isCurrentMonth: false,
       dateString: date.toISOString().split('T')[0]
@@ -293,6 +294,7 @@ export function generateMonthCalendar(year, month) {
     const date = new Date(year, month, i);
     days.push({
       date,
+      day: i,
       dayNumber: i,
       isCurrentMonth: true,
       dateString: date.toISOString().split('T')[0]
@@ -305,6 +307,7 @@ export function generateMonthCalendar(year, month) {
     const date = new Date(year, month + 1, i);
     days.push({
       date,
+      day: i,
       dayNumber: i,
       isCurrentMonth: false,
       dateString: date.toISOString().split('T')[0]

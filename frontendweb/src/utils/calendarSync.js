@@ -1,3 +1,5 @@
+import { API_BASE } from '../services/api';
+
 /**
  * Calendar sync and export utilities
  */
@@ -70,6 +72,7 @@ export function downloadFilteredCalendar(selectedPlatforms = [], selectedDivisio
     params.set('divisions', selectedDivisions.join(','));
   }
 
-  const downloadUrl = `/api/contests/calendar.ics?${params.toString()}`;
+  const base = API_BASE ? API_BASE.replace(/\/+$/, '') : 'https://contendar.onrender.com/api';
+  const downloadUrl = `${base}/contests/calendar.ics?${params.toString()}`;
   window.open(downloadUrl, '_blank');
 }

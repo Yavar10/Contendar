@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import {
   generateMonthCalendar,
   isSameDay,
   formatTimeCompact,
-  getSmartContestTitle,
-  formatTimeOnly
+  getSmartContestTitle
 } from '../utils/timeUtils';
 import { PlatformIcon } from './PlatformIcons';
 
@@ -102,73 +101,65 @@ export function CalendarView({
           return (
             <div
               key={index}
-              className={`calendar-day-tile ${
-                !dayItem.isCurrentMonth ? 'is-muted-day' : ''
-              } ${isToday ? 'is-today-tile' : ''} ${hasContests ? 'has-events' : ''}`}
+              className={`calendar-day-cell ${
+                !dayItem.isCurrentMonth ? 'is-outside-month' : ''
+              } ${isToday ? 'is-today-cell' : ''} ${
+                hasContests ? 'has-contests' : ''
+              }`}
               onClick={() => {
                 if (hasContests) {
                   onSelectDay({ date: dayItem.date, contests: dayContests });
                 }
               }}
-              title={
-                hasContests
-                  ? `${dayContests.length} contest(s) on ${dayItem.date.toDateString()}`
-                  : ''
-              }
             >
-              {/* Day Cell Header */}
-              <div className="day-tile-header">
-                <span className={`day-number ${isToday ? 'today-circle' : ''}`}>
-                  {dayItem.dayNumber}
+              {/* Day Number Header */}
+              <div className="day-header-row">
+                <span className={`day-number ${isToday ? 'today-pill' : ''}`}>
+                  {dayItem.dayNumber ?? dayItem.day ?? dayItem.date.getDate()}
                 </span>
 
                 {hasContests && (
-                  <span className="day-events-pill">
-                    {dayContests.length}
-                  </span>
+                  <div className="day-platform-dots">
+                    {Array.from(new Set(dayContests.map((c) => c.platform)))
+                      .slice(0, 4)
+                      .map((p) => (
+                        <span key={p} className={`platform-dot platform-dot-${p}`} title={p} />
+                      ))}
+                  </div>
                 )}
               </div>
 
-              {/* Day Events Stack */}
+              {/* Event Pills */}
               <div className="day-events-stack">
                 {displayContests.map((c) => {
-                  const smartTitle = getSmartContestTitle(c.title, c.platform);
-                  const timeStr = formatTimeCompact(c.startTimeMs, timezone);
                   const isLive = c.status === 'LIVE';
+                  const shortTitle = getSmartContestTitle(c.title, c.platform);
 
                   return (
                     <div
                       key={c.id}
-                      className={`calendar-event-item ${isLive ? 'is-live-event' : ''}`}
+                      className={`calendar-contest-pill platform-${c.platform} ${
+                        isLive ? 'is-live-pill' : ''
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectContest(c);
                       }}
-                      title={`${c.platformName}: ${c.title}\nStarts: ${formatTimeOnly(
-                        c.startTimeMs,
-                        timezone
-                      )}\nDuration: ${Math.round(c.durationSeconds / 60)}m`}
+                      title={`${c.platformName}: ${c.title}`}
                     >
-                      <PlatformIcon platform={c.platform} size={11} className="event-icon" />
-                      <span className="event-time mono">{timeStr}</span>
-                      <span className="event-title">{smartTitle}</span>
-                      {isLive && <span className="event-live-indicator" />}
+                      <PlatformIcon platform={c.platform} size={11} />
+                      <span className="pill-time mono">
+                        {formatTimeCompact(c.startTimeMs, timezone)}
+                      </span>
+                      <span className="pill-title">{shortTitle}</span>
                     </div>
                   );
                 })}
 
-                {/* More events link */}
                 {remainingCount > 0 && (
-                  <button
-                    className="more-events-tag"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectDay({ date: dayItem.date, contests: dayContests });
-                    }}
-                    title={`View all ${dayContests.length} contests on this date`}
-                  >
+                  <div className="more-contests-pill">
                     +{remainingCount} more
-                  </button>
+                  </div>
                 )}
               </div>
             </div>

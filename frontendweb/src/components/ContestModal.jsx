@@ -9,7 +9,10 @@ import {
   Clock,
   Calendar,
   Layers,
-  Info
+  Info,
+  Timer,
+  ChevronRight,
+  Globe
 } from 'lucide-react';
 import { formatDateTime, formatDuration, getCountdown } from '../utils/timeUtils';
 import { createGoogleCalendarUrl, downloadSingleContestIcs } from '../utils/calendarSync';
@@ -53,7 +56,7 @@ export function ContestModal({ contest, timezone, onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-window animate-scale-up"
+        className="modal-window contest-detail-modal animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Top Header */}
@@ -62,7 +65,7 @@ export function ContestModal({ contest, timezone, onClose }) {
             <PlatformIcon platform={contest.platform} size={20} />
             <div>
               <span className="modal-platform-name">{contest.platformName}</span>
-              <span className="modal-sub-id">#{contest.id}</span>
+              <span className="modal-sub-id">Round #{contest.id}</span>
             </div>
           </div>
 
@@ -70,7 +73,7 @@ export function ContestModal({ contest, timezone, onClose }) {
             {isLive ? (
               <div className="modal-live-pill">
                 <span className="live-pulse-dot-sm" />
-                <span>Live Now</span>
+                <span>Live Battle</span>
               </div>
             ) : (
               <div className="modal-upcoming-pill">
@@ -91,105 +94,109 @@ export function ContestModal({ contest, timezone, onClose }) {
             {contest.title}
           </h2>
 
-          {/* Countdown & Progress Box */}
+          {/* Division Tags */}
+          <div className="modal-division-row">
+            {contest.divisions.map((div, i) => (
+              <span key={i} className="division-chip">
+                {div}
+              </span>
+            ))}
+            {contest.type && (
+              <span className="division-chip division-type-chip">
+                {contest.type}
+              </span>
+            )}
+          </div>
+
+          {/* Apple Live Activity / Countdown Strip */}
           <div className={`modal-countdown-strip ${isLive ? 'is-live-strip' : ''}`}>
             <div className="modal-countdown-row">
               <div className="modal-countdown-text mono">
-                <Clock size={15} />
+                <Timer size={16} />
                 <span>
                   {isLive ? 'Time Remaining: ' : 'Starts in: '}
                   <strong>{countdown.label}</strong>
                 </span>
               </div>
-              {isLive && (
-                <span className="modal-countdown-pct mono">
-                  {Math.round(countdown.progress)}% completed
-                </span>
-              )}
-            </div>
-            {isLive && (
-              <div className="modal-progress-track">
-                <div
-                  className="modal-progress-bar"
-                  style={{ width: `${Math.min(100, Math.max(0, countdown.progress))}%` }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Divisions */}
-          <div className="modal-section">
-            <span className="modal-section-title">
-              Eligible Divisions & Rating Categories
-            </span>
-            <div className="modal-chips-row">
-              {contest.divisions.map((d, i) => (
-                <span key={i} className="modal-chip">
-                  {d}
-                </span>
-              ))}
-              {contest.type && (
-                <span className="modal-chip modal-chip-type">
-                  {contest.type}
-                </span>
-              )}
+              <span className="modal-countdown-badge mono">
+                {isLive ? 'Active' : 'Scheduled'}
+              </span>
             </div>
           </div>
 
-          {/* Telemetry Grid */}
-          <div className="modal-grid-2x2">
-            <div className="modal-grid-cell">
-              <span className="grid-cell-label">Start Time</span>
-              <span className="grid-cell-value mono">
+          {/* Grouped Information Table (Apple Settings style) */}
+          <div className="modal-info-card">
+            <div className="modal-info-row">
+              <span className="modal-info-label">
+                <Calendar size={14} />
+                <span>Start Time</span>
+              </span>
+              <span className="modal-info-value mono">
                 {formatDateTime(contest.startTimeMs, timezone)}
               </span>
             </div>
 
-            <div className="modal-grid-cell">
-              <span className="grid-cell-label">End Time</span>
-              <span className="grid-cell-value mono">
-                {formatDateTime(contest.endTimeMs, timezone)}
-              </span>
-            </div>
+            <div className="modal-info-separator" />
 
-            <div className="modal-grid-cell">
-              <span className="grid-cell-label">Duration</span>
-              <span className="grid-cell-value mono">
+            <div className="modal-info-row">
+              <span className="modal-info-label">
+                <Clock size={14} />
+                <span>Duration</span>
+              </span>
+              <span className="modal-info-value mono">
                 {formatDuration(contest.durationSeconds)}
               </span>
             </div>
 
-            <div className="modal-grid-cell">
-              <span className="grid-cell-label">Format</span>
-              <span className="grid-cell-value">
-                {contest.type || 'Official Rated'}
+            <div className="modal-info-separator" />
+
+            <div className="modal-info-row">
+              <span className="modal-info-label">
+                <Globe size={14} />
+                <span>Display Timezone</span>
+              </span>
+              <span className="modal-info-value">
+                {timezone === 'local' ? 'Local System Time' : timezone}
               </span>
             </div>
           </div>
-
-          {/* Description */}
-          {contest.description && (
-            <div className="modal-desc">
-              <Info size={15} className="desc-icon" />
-              <span>{contest.description}</span>
-            </div>
-          )}
         </div>
 
-        {/* Modal Footer */}
+        {/* Modal Action Footer */}
         <div className="modal-footer">
-          <div className="modal-footer-btns">
-            <button className="footer-action-btn" onClick={handleGCal}>
+          <div className="modal-secondary-actions">
+            <button
+              className="footer-action-btn"
+              onClick={handleGCal}
+              title="Add to Google Calendar"
+            >
               <CalendarPlus size={14} />
-              <span>GCal</span>
+              <span>Google Calendar</span>
             </button>
-            <button className="footer-action-btn" onClick={handleIcs}>
+            <button
+              className="footer-action-btn"
+              onClick={handleIcs}
+              title="Download .ics Calendar Event"
+            >
               <Download size={14} />
-              <span>.ics</span>
+              <span>Export .ics</span>
             </button>
-            <button className="footer-action-btn" onClick={handleCopyLink}>
-              {copied ? <Check size={14} style={{ color: '#10b981' }} /> : <Copy size={14} />}
-              <span>{copied ? 'Copied' : 'Copy'}</span>
+            <button
+              className="footer-action-btn"
+              onClick={handleCopyLink}
+              title="Copy link to clipboard"
+            >
+              {copied ? (
+                <>
+                  <Check size={14} style={{ color: 'var(--accent-live)' }} />
+                  <span>Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={14} />
+                  <span>Copy Link</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -197,9 +204,9 @@ export function ContestModal({ contest, timezone, onClose }) {
             href={contest.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="footer-primary-btn"
+            className="primary-apple-btn"
           >
-            <span>Enter Contest</span>
+            <span>{isLive ? 'Enter Contest' : 'Open Contest'}</span>
             <ExternalLink size={14} />
           </a>
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ContestCard } from './ContestCard';
 import { groupContestsByTimeline } from '../utils/timeUtils';
-import { CalendarX, Sparkles, Radio } from 'lucide-react';
+import { CalendarX, Sparkles, Radio, Calendar, Layers } from 'lucide-react';
 
 export function ListView({
   contests,
@@ -15,13 +15,13 @@ export function ListView({
     return (
       <div className="empty-state-card">
         <div className="empty-state-icon-box">
-          <CalendarX size={28} />
+          <CalendarX size={32} strokeWidth={1.75} />
         </div>
-        <h3 className="empty-state-title">No contests match your filters</h3>
+        <h3 className="empty-state-title">No contests match your radar</h3>
         <p className="empty-state-desc">
-          Try clearing your platform filters or resetting divisions to see upcoming rounds.
+          Try broadening your platform filters or resetting division selections to view upcoming competitive programming rounds.
         </p>
-        <button className="reset-filters-btn" onClick={onResetFilters}>
+        <button className="primary-apple-btn" onClick={onResetFilters}>
           <Sparkles size={14} />
           <span>Reset All Filters</span>
         </button>
@@ -31,7 +31,7 @@ export function ListView({
 
   return (
     <div className="timeline-container">
-      {/* 1. Live Now */}
+      {/* 1. Happening Right Now */}
       {groups.live.length > 0 && (
         <section className="timeline-block">
           <div className="timeline-heading-row">
@@ -133,7 +133,7 @@ export function ListView({
         <section className="timeline-block">
           <div className="timeline-heading-row">
             <h2 className="timeline-heading">
-              <span>Later This Month</span>
+              <span>Later</span>
             </h2>
             <span className="timeline-badge">
               {groups.later.length} {groups.later.length === 1 ? 'round' : 'rounds'}

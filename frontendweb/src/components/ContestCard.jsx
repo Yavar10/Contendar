@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, CalendarPlus, Clock, Download, Calendar } from 'lucide-react';
-import { formatDateTime, formatDuration, getCountdown } from '../utils/timeUtils';
+import {
+  ExternalLink,
+  CalendarPlus,
+  Clock,
+  Download,
+  Calendar,
+  Copy,
+  Check,
+  ChevronRight
+} from 'lucide-react';
+import { formatDateTime, formatDuration, getCountdown, formatTimeOnly } from '../utils/timeUtils';
 import { createGoogleCalendarUrl, downloadSingleContestIcs } from '../utils/calendarSync';
 import { PlatformIcon } from './PlatformIcons';
 
 export function ContestCard({ contest, timezone, onSelectContest }) {
   const [nowMs, setNowMs] = useState(Date.now());
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -41,115 +51,109 @@ export function ContestCard({ contest, timezone, onSelectContest }) {
     downloadSingleContestIcs(contest);
   };
 
+  const handleCopyLink = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(contest.url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div
       className={`contest-item-card ${isLive ? 'is-live-card' : ''}`}
       onClick={handleCardClick}
     >
-      <div>
-        {/* Top Header Row */}
-        <div className="card-header-row">
-          <div className="platform-tag">
-            <PlatformIcon platform={contest.platform} size={15} />
-            <span className="platform-tag-name">{contest.platformName}</span>
-          </div>
-
-          {isLive ? (
-            <div className="live-badge">
-              <span className="live-pulse-dot-sm" />
-              <span>Live Now</span>
-            </div>
-          ) : (
-            <div className="upcoming-countdown-badge">
-              <span>{countdown.label}</span>
-            </div>
-          )}
+      <div className="card-top-strip">
+        {/* Platform Tag */}
+        <div className="platform-tag">
+          <PlatformIcon platform={contest.platform} size={15} />
+          <span className="platform-tag-name">{contest.platformName}</span>
         </div>
 
-        {/* Contest Title */}
-        <h3 className="contest-title" title={contest.title}>
-          {contest.title}
-        </h3>
-
-        {/* Division Tags */}
-        <div className="division-tags-wrap">
-          {contest.divisions.map((div, i) => (
-            <span key={i} className="division-chip">
-              {div}
-            </span>
-          ))}
-          {contest.type && (
-            <span className="division-chip division-type-chip">
-              {contest.type}
-            </span>
-          )}
-        </div>
-
-        {/* Schedule & Duration Meta */}
-        <div className="schedule-meta-box">
-          <div className="schedule-item">
-            <Calendar size={13} className="schedule-icon" />
-            <span className="schedule-text">
-              {formatDateTime(contest.startTimeMs, timezone)}
-            </span>
+        {/* Live or Countdown Pill */}
+        {isLive ? (
+          <div className="live-badge">
+            <span className="live-pulse-dot-sm" />
+            <span>Live Now</span>
           </div>
-          <div className="schedule-item">
-            <Clock size={13} className="schedule-icon" />
-            <span className="schedule-text">
-              {formatDuration(contest.durationSeconds)}
-            </span>
-          </div>
-        </div>
-
-        {/* Live Contest Progress Bar */}
-        {isLive && (
-          <div className="live-progress-box">
-            <div className="live-progress-meta">
-              <span className="live-progress-time">{countdown.label} remaining</span>
-              <span className="live-progress-pct">{Math.round(countdown.progress)}%</span>
-            </div>
-            <div className="live-progress-track">
-              <div
-                className="live-progress-bar"
-                style={{ width: `${Math.min(100, Math.max(0, countdown.progress))}%` }}
-              />
-            </div>
+        ) : (
+          <div className="upcoming-countdown-badge mono">
+            <span>{countdown.label}</span>
           </div>
         )}
       </div>
 
-      {/* Action Footer */}
-      <div className="card-actions-bar">
-        <a
-          href={contest.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="action-btn-primary"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <span>Open Arena</span>
-          <ExternalLink size={13} />
-        </a>
+      {/* Contest Title */}
+      <h3 className="contest-title" title={contest.title}>
+        {contest.title}
+      </h3>
 
-        <div className="card-actions-right">
+      {/* Division Badges */}
+      <div className="division-tags-wrap">
+        {contest.divisions.map((div, i) => (
+          <span key={i} className="division-chip">
+            {div}
+          </span>
+        ))}
+        {contest.type && (
+          <span className="division-chip division-type-chip">
+            {contest.type}
+          </span>
+        )}
+      </div>
+
+      {/* Schedule & Duration Meta */}
+      <div className="schedule-meta-box">
+        <div className="schedule-item">
+          <Calendar size={13} className="schedule-icon" />
+          <span className="schedule-text mono">
+            {formatDateTime(contest.startTimeMs, timezone)}
+          </span>
+        </div>
+        <div className="schedule-item">
+          <Clock size={13} className="schedule-icon" />
+          <span className="schedule-text mono">
+            {formatDuration(contest.durationSeconds)}
+          </span>
+        </div>
+      </div>
+
+      {/* Action Footer */}
+      <div className="card-action-footer">
+        <div className="card-quick-actions" onClick={(e) => e.stopPropagation()}>
           <button
-            className="action-btn-secondary"
+            className="card-quick-btn"
             onClick={handleGCalClick}
             title="Add to Google Calendar"
           >
             <CalendarPlus size={14} />
-            <span className="btn-label">GCal</span>
           </button>
-
           <button
-            className="action-btn-secondary"
+            className="card-quick-btn"
             onClick={handleIcsClick}
-            title="Download iCal file (.ics)"
+            title="Download .ics Calendar Event"
           >
             <Download size={14} />
-            <span className="btn-label">.ics</span>
+          </button>
+          <button
+            className="card-quick-btn"
+            onClick={handleCopyLink}
+            title="Copy Contest Link"
+          >
+            {copied ? <Check size={14} style={{ color: 'var(--accent-live)' }} /> : <Copy size={14} />}
           </button>
         </div>
+
+        <a
+          href={contest.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="card-open-link"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span>{isLive ? 'Enter' : 'View'}</span>
+          <ChevronRight size={14} />
+        </a>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
-import { X, Calendar as CalendarIcon, Clock } from 'lucide-react';
-import { formatDateTime, formatDuration } from '../utils/timeUtils';
+import { X, Calendar as CalendarIcon, Clock, ChevronRight } from 'lucide-react';
+import { formatDateTime, formatDuration, formatTimeOnly } from '../utils/timeUtils';
 import { PlatformIcon } from './PlatformIcons';
 
 export function DayDetailModal({ dayData, timezone, onClose, onSelectContest }) {
@@ -17,18 +17,19 @@ export function DayDetailModal({ dayData, timezone, onClose, onSelectContest }) 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-window animate-scale-up"
+        className="modal-window day-detail-modal animate-scale-up"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: '560px' }}
       >
         {/* Header */}
         <div className="modal-header">
           <div className="modal-header-platform">
-            <CalendarIcon size={18} style={{ color: 'var(--accent-indigo)' }} />
+            <div className="day-modal-icon">
+              <CalendarIcon size={18} />
+            </div>
             <div>
               <h3 className="modal-platform-name">{formattedDate}</h3>
               <span className="modal-sub-id">
-                {contests.length} {contests.length === 1 ? 'round' : 'rounds'} scheduled
+                {contests.length} {contests.length === 1 ? 'contest' : 'contests'} scheduled
               </span>
             </div>
           </div>
@@ -38,7 +39,7 @@ export function DayDetailModal({ dayData, timezone, onClose, onSelectContest }) 
           </button>
         </div>
 
-        {/* Contest List */}
+        {/* Contest Agenda List */}
         <div className="modal-body-content">
           <div className="day-items-list">
             {contests.map((c) => {
@@ -52,7 +53,7 @@ export function DayDetailModal({ dayData, timezone, onClose, onSelectContest }) 
                 >
                   <div className="day-item-top">
                     <div className="day-item-platform">
-                      <PlatformIcon platform={c.platform} size={14} />
+                      <PlatformIcon platform={c.platform} size={15} />
                       <span className="platform-tag-name">{c.platformName}</span>
                     </div>
 
@@ -93,8 +94,8 @@ export function DayDetailModal({ dayData, timezone, onClose, onSelectContest }) 
 
         {/* Footer */}
         <div className="modal-footer" style={{ justifyContent: 'flex-end' }}>
-          <button className="footer-action-btn" onClick={onClose}>
-            Close
+          <button className="primary-apple-btn" onClick={onClose}>
+            Done
           </button>
         </div>
       </div>

@@ -1,5 +1,14 @@
-import React from 'react';
-import { Search, X, Check, List, Calendar as CalendarIcon, SlidersHorizontal, Filter } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import {
+  Search,
+  X,
+  Check,
+  List,
+  Calendar as CalendarIcon,
+  SlidersHorizontal,
+  Filter,
+  RotateCcw
+} from 'lucide-react';
 import { PlatformIcon } from './PlatformIcons';
 
 const COMMON_DIVISIONS = [
@@ -29,22 +38,39 @@ export function FilterBar({
   onViewModeChange,
   statusFilter,
   onStatusFilterChange,
-  contestCountsByPlatform
+  contestCountsByPlatform,
+  totalResultsCount
 }) {
+  const searchInputRef = useRef(null);
+
   const isAllPlatformsSelected = selectedPlatforms.length === platforms.length;
   const isAllDivisionsSelected = selectedDivisions.includes('All') || selectedDivisions.length === 0;
+  const hasActiveFilters = !isAllPlatformsSelected || !isAllDivisionsSelected || statusFilter !== 'all' || searchQuery.trim() !== '';
+
+  // Keyboard shortcut '/' or 'Cmd+K' to focus search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key === 'k')) && document.activeElement !== searchInputRef.current) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="filter-command-panel">
-      {/* Search, Status, and View Toggle Header */}
+      {/* Search & Status Bar */}
       <div className="filter-main-bar">
-        {/* Search input with keyboard indicator */}
+        {/* Search Field */}
         <div className="search-field-wrap">
           <Search size={15} className="search-icon" />
           <input
+            ref={searchInputRef}
             type="text"
             className="search-field"
-            placeholder="Filter by contest title, division, or keyword..."
+            placeholder="Search contests, divisions, or platforms..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -62,7 +88,7 @@ export function FilterBar({
           )}
         </div>
 
-        {/* Status Toggle (Segmented control) */}
+        {/* Apple Segmented Control for Status */}
         <div className="segmented-control">
           {[
             { id: 'all', label: 'All' },
@@ -82,28 +108,32 @@ export function FilterBar({
           ))}
         </div>
 
-        {/* View Mode Switcher */}
-        <div className="view-toggle-wrap">
-          <button
-            className={`view-toggle-btn ${viewMode === 'list' ? 'is-active' : ''}`}
-            onClick={() => onViewModeChange('list')}
-            title="Switch to List View"
-          >
-            <List size={15} />
-            <span className="hide-mobile">List</span>
-          </button>
-          <button
-            className={`view-toggle-btn ${viewMode === 'calendar' ? 'is-active' : ''}`}
-            onClick={() => onViewModeChange('calendar')}
-            title="Switch to Calendar View"
-          >
-            <CalendarIcon size={15} />
-            <span className="hide-mobile">Calendar</span>
-          </button>
+        {/* Results Counter & Reset Action */}
+        <div className="filter-meta-actions">
+          {totalResultsCount !== undefined && (
+            <span className="filter-count-badge">
+              {totalResultsCount} {totalResultsCount === 1 ? 'round' : 'rounds'}
+            </span>
+          )}
+          {hasActiveFilters && (
+            <button
+              className="filter-reset-pill"
+              onClick={() => {
+                onSelectAllPlatforms();
+                onSelectAllDivisions();
+                onStatusFilterChange('all');
+                onSearchChange('');
+              }}
+              title="Reset all filters"
+            >
+              <RotateCcw size={12} />
+              <span className="hide-mobile">Reset</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Platform Filter Row */}
+      {/* Platform Filter Pills */}
       <div className="filter-row">
         <div className="filter-row-label">
           <SlidersHorizontal size={13} />
@@ -137,7 +167,7 @@ export function FilterBar({
         </div>
       </div>
 
-      {/* Division Filter Row */}
+      {/* Division Filter Pills */}
       <div className="filter-row">
         <div className="filter-row-label">
           <Filter size={13} />
@@ -160,10 +190,13 @@ export function FilterBar({
             return (
               <button
                 key={div}
-                className={`division-tag-btn ${isSelected ? 'is-selected' : ''}`}
+                className={`division-btn ${isSelected ? 'is-selected' : ''}`}
                 onClick={() => onToggleDivision(div)}
               >
-                {div}
+                <span>{div}</span>
+                {isSelected && div !== 'All' && (
+                  <Check size={11} strokeWidth={2.5} className="division-btn-check" />
+                )}
               </button>
             );
           })}

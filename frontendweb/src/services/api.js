@@ -2,7 +2,24 @@
  * API service for fetching platforms and contests from the backend.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://contendar.onrender.com/api';
+export const API_BASE = import.meta.env.VITE_API_BASE || 'https://contendar.onrender.com/api';
+
+/**
+ * Check backend health and latency in milliseconds
+ */
+export async function checkServerHealth() {
+  const start = performance.now();
+  try {
+    const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(8000) });
+    const latencyMs = Math.round(performance.now() - start);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return { ok: true, latencyMs, message: data.message || 'Operational' };
+  } catch (err) {
+    const latencyMs = Math.round(performance.now() - start);
+    return { ok: false, latencyMs, message: err.message || 'Offline' };
+  }
+}
 
 /**
  * Fetch platform metadata from the backend.
